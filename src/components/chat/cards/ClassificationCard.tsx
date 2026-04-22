@@ -81,9 +81,8 @@ export function ClassificationCard() {
           </thead>
           <tbody>
             {vars.map((v) => (
-              <>
+              <FragmentRow key={v.id}>
                 <tr
-                  key={v.id}
                   className={`border-t border-border ${v.flagged ? "bg-warning/5" : ""}`}
                 >
                   <td className="px-4 py-2 font-mono text-[11px] font-medium text-foreground">
