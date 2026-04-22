@@ -4,9 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
-import Workflow from "./pages/Workflow.tsx";
-import Classification from "./pages/Classification.tsx";
-import ModelOutput from "./pages/ModelOutput.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -19,9 +16,6 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/workflow" element={<Workflow />} />
-          <Route path="/classification" element={<Classification />} />
-          <Route path="/model-output" element={<ModelOutput />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
