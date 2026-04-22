@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { AlertTriangle, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +81,7 @@ export function ClassificationCard() {
           </thead>
           <tbody>
             {vars.map((v) => (
-              <FragmentRow key={v.id}>
+              <Fragment key={v.id}>
                 <tr
                   className={`border-t border-border ${v.flagged ? "bg-warning/5" : ""}`}
                 >
@@ -115,7 +115,7 @@ export function ClassificationCard() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
