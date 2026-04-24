@@ -170,14 +170,7 @@ const Index = () => {
 
   const handleNewChat = () => {
     setActiveThreadId("");
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        text: `New chat in **${activeProject?.name}**. What would you like to do? I can show projects, upload data, set variable groups, run a model, or jump to optimisation.`,
-        card: "selector",
-      },
-    ]);
+    setMessages([]); // empty -> ChatLanding renders
   };
 
   const handleNewProject = () => {
@@ -196,6 +189,21 @@ const Index = () => {
     setActiveThreadId(id);
     if (id === "t1") setMessages(seededMessages);
     else handleNewChat();
+  };
+
+  const handlePickProject = (projectId: string, projectName: string) => {
+    setActiveProjectId(projectId);
+    // Simulate the AI handoff — in production this comes from chat-route.
+    setMessages((prev) => [
+      ...prev,
+      { id: `u${Date.now()}`, role: "user", text: `Open ${projectName}` },
+      {
+        id: `a${Date.now() + 1}`,
+        role: "assistant",
+        text: `Switching you into **${projectName}**. You're at **stage 7 of 9 — Model Interpretation**, with 3 models run on Batch 2. Here's a snapshot — ready to resume, or want to start something fresh?`,
+        card: "project",
+      },
+    ]);
   };
 
   return (
