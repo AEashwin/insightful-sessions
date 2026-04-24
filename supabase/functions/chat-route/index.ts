@@ -2,7 +2,8 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 const CARDS = [
-  { name: "selector", desc: "Project selector — list/filter projects by market or create new." },
+  { name: "selector", desc: "Project picker — browse, filter and OPEN an EXISTING project. Use ONLY when user wants to find/resume/list projects. Do NOT use for creating new projects." },
+  { name: "newProject", desc: "Form to CREATE a NEW project — captures name, brand, BU, market, KPI. Use whenever the user wants to start/create/set up a new project or analysis." },
   { name: "project", desc: "Snapshot of the active project (stage, kpi, dates)." },
   { name: "upload", desc: "Upload datacube CSV, auto-detect columns, validate coverage." },
   { name: "groups", desc: "6-level variable hierarchy (Base/Incremental/Dependent/Dimension)." },
