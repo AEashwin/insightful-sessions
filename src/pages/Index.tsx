@@ -230,6 +230,8 @@ const Index = () => {
           activeProjectName={activeProject?.name}
           activeThreadTitle={activeThread?.title}
           onSend={handleSend}
+          onPickProject={handlePickProject}
+          userName="John"
         />
       </div>
     </SidebarProvider>
