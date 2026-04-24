@@ -349,7 +349,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (
