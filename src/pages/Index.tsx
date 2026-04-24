@@ -16,6 +16,9 @@ import { OptimisationCard } from "@/components/chat/cards/OptimisationCard";
 import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { Sparkles } from "lucide-react";
 
 type CardKey =
   | "project"
@@ -96,56 +99,61 @@ const cardMap: Record<CardKey, React.FC> = {
   classification: ClassificationCard,
 };
 
-interface Route {
-  keywords: string[];
-  card: CardKey;
-  response: string;
-}
-
-const routes: Route[] = [
-  { keywords: ["select project", "show projects", "pick project", "new project", "filter project"], card: "selector", response: "Here are your projects — filter by market or create a new one." },
-  { keywords: ["upload", "datacube", "data file", "csv"], card: "upload", response: "Drop your datacube here. I'll auto-detect columns and validate coverage." },
-  { keywords: ["group", "hierarchy", "level 1", "base/incremental", "classify groups"], card: "groups", response: "Variables auto-grouped into the 6-level hierarchy. You can edit any node." },
-  { keywords: ["propert", "type", "unit", "aggregat"], card: "properties", response: "Variable properties — review type, unit, aggregation and missing data." },
-  { keywords: ["mapping", "map spend", "impressions", "clicks"], card: "mapping", response: "Spend → impressions / clicks mapping. 4 mapped, 2 need attention." },
-  { keywords: ["transform", "adstock", "gamma", "saturation", "model variables"], card: "transformations", response: "Model variables with transformations and saturation curves:" },
-  { keywords: ["result", "rsq", "r²", "mape", "roi", "contribution"], card: "results", response: "Model results — fit metrics, base/incremental split and channel ROI:" },
-  { keywords: ["summar", "insight", "narrative", "explain model"], card: "summary", response: "AI-generated model summary:" },
-  { keywords: ["optimi", "simulat", "scenario", "reallocat"], card: "optimisation", response: "Optimised allocation suggests +12.4% ROI. Drag sliders to explore scenarios:" },
-  { keywords: ["flight", "monthly", "calendar", "plan", "schedule"], card: "flighting", response: "Monthly flighting pattern across channels:" },
-  { keywords: ["classif", "variable review", "flag"], card: "classification", response: "Variable classifications — two need attention:" },
-  { keywords: ["workflow", "stage", "progress", "where am i"], card: "workflow", response: "Here's the current workflow status:" },
-  { keywords: ["snapshot", "summary card", "project info"], card: "project", response: "Project snapshot below:" },
-  { keywords: ["run model", "fit model", "train"], card: "transformations", response: "Before running, confirm transformations are right:" },
-];
-
 const Index = () => {
   const [activeProjectId, setActiveProjectId] = useState("1");
   const [activeThreadId, setActiveThreadId] = useState("t1");
   const [messages, setMessages] = useState<Message[]>(seededMessages);
+  const [thinking, setThinking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, thinking]);
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
-    setMessages((prev) => [...prev, userMsg]);
+    const history = [...messages, userMsg];
+    setMessages(history);
+    setThinking(true);
 
-    setTimeout(() => {
-      const lower = text.toLowerCase();
-      const match = routes.find((r) => r.keywords.some((k) => lower.includes(k)));
+    try {
+      const apiHistory = history
+        .filter((m) => m.text)
+        .slice(-12)
+        .map((m) => ({ role: m.role, content: m.text! }));
+
+      const { data, error } = await supabase.functions.invoke("chat-route", {
+        body: { messages: apiHistory },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error.toLowerCase().includes("rate")) {
+          toast({ title: "Slow down", description: "Too many requests — try again in a moment." });
+        } else if (data.error.toLowerCase().includes("credit")) {
+          toast({ title: "AI credits exhausted", description: "Add credits in Workspace settings.", variant: "destructive" });
+        } else {
+          toast({ title: "AI error", description: data.error, variant: "destructive" });
+        }
+        return;
+      }
+
+      const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: match?.response ?? "Got it. Tell me which step you'd like to see — projects, upload, groups, transformations, results, summary, optimisation or flighting.",
-        card: match?.card,
+        text: data?.preamble ?? "Got it.",
+        card: card && cardMap[card] ? card : undefined,
       };
       setMessages((prev) => [...prev, aiMsg]);
-    }, 350);
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Couldn't reach AI", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setThinking(false);
+    }
   };
 
   const handleNewChat = () => {
@@ -212,6 +220,18 @@ const Index = () => {
                 </ChatMessage>
               );
             })}
+            {thinking && (
+              <div className="flex gap-4">
+                <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles size={14} className="text-primary animate-pulse" />
+                </div>
+                <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

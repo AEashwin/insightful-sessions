@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Sparkles, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Channel {
   name: string;
@@ -19,9 +20,33 @@ const initial: Channel[] = [
 
 export function OptimisationCard() {
   const [channels, setChannels] = useState(initial);
+  const [narration, setNarration] = useState<string>("");
+  const [narrating, setNarrating] = useState(false);
+  const debounceRef = useRef<number | null>(null);
   const totalCurrent = channels.reduce((s, c) => s + c.current, 0);
   const totalOpt = channels.reduce((s, c) => s + c.optimised, 0);
   const max = Math.max(...channels.map((c) => Math.max(c.current, c.optimised)));
+
+  useEffect(() => {
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(async () => {
+      setNarrating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("card-insights", {
+          body: { kind: "optimisation_narration", context: { channels, totalCurrent, totalOpt } },
+        });
+        if (error || data?.error) throw new Error(data?.error ?? error?.message);
+        if (data?.narration) setNarration(data.narration);
+      } catch (e) {
+        console.error("optimisation narration failed", e);
+      } finally {
+        setNarrating(false);
+      }
+    }, 600);
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    };
+  }, [channels, totalCurrent, totalOpt]);
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -52,6 +77,21 @@ export function OptimisationCard() {
             <p className="text-sm font-bold text-foreground mt-0.5">+£540k</p>
           </div>
         </div>
+
+        {(narration || narrating) && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 flex gap-2">
+            <div className="h-5 w-5 rounded-md bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
+              {narrating ? (
+                <Loader2 size={11} className="text-primary animate-spin" />
+              ) : (
+                <Sparkles size={11} className="text-primary" />
+              )}
+            </div>
+            <p className="text-[11px] text-foreground/85 leading-relaxed">
+              {narration || "Analysing scenario…"}
+            </p>
+          </div>
+        )}
 
         <div className="space-y-2.5">
           {channels.map((c, i) => {
