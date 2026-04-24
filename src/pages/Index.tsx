@@ -220,6 +220,18 @@ const Index = () => {
                 </ChatMessage>
               );
             })}
+            {thinking && (
+              <div className="flex gap-4">
+                <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles size={14} className="text-primary animate-pulse" />
+                </div>
+                <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
