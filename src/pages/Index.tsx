@@ -43,6 +43,7 @@ interface Message {
   role: "user" | "assistant";
   text?: string;
   card?: CardKey;
+  prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
 }
 
 const projects: Project[] = [
