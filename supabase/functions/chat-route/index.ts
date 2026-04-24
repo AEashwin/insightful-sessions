@@ -111,17 +111,19 @@ Always respond by calling the route_intent function.`;
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     let preamble = "Got it.";
     let card: string | null = null;
+    let prefill: Record<string, string> | null = null;
     if (call?.function?.arguments) {
       try {
         const args = JSON.parse(call.function.arguments);
         preamble = args.preamble ?? preamble;
         card = args.card ?? null;
+        prefill = args.prefill ?? null;
       } catch (e) {
         console.error("Failed to parse tool args", e);
       }
     }
 
-    return new Response(JSON.stringify({ preamble, card }), {
+    return new Response(JSON.stringify({ preamble, card, prefill }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
