@@ -4,6 +4,7 @@ import { ArrowUp, Paperclip, Sparkles } from "lucide-react";
 interface ChatComposerProps {
   onSend: (text: string) => void;
   suggestions?: string[];
+  maxWidthClass?: string;
 }
 
 const defaultSuggestions = [
@@ -19,7 +20,7 @@ const defaultSuggestions = [
   "Flighting plan",
 ];
 
-export function ChatComposer({ onSend, suggestions = defaultSuggestions }: ChatComposerProps) {
+export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidthClass = "max-w-3xl" }: ChatComposerProps) {
   const [value, setValue] = useState("");
 
   const submit = () => {
@@ -37,7 +38,7 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions }: ChatC
 
   return (
     <div className="px-6 pb-6 pt-2 bg-gradient-to-t from-background via-background to-transparent">
-      <div className="max-w-3xl mx-auto">
+      <div className={`${maxWidthClass} mx-auto transition-[max-width] duration-200 ease-linear`}>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {suggestions.map((s) => (
             <button
