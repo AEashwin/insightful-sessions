@@ -90,11 +90,42 @@ export function ToolRail({ activeToolId, onSelectTool }: ToolRailProps) {
               </TooltipContent>
             </Tooltip>
           );
-        })}
-      </div>
+      })}
+    </div>
+  );
+}
 
-      {/* Main collapsible sidebar */}
-      <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+interface QubeSidebarProps {
+  projects: Project[];
+  threads: ChatThread[];
+  activeThreadId: string;
+  activeProjectId: string;
+  activeToolId: string;
+  onSelectThread: (id: string) => void;
+  onSelectProject: (id: string) => void;
+  onNewChat: () => void;
+  onNewProject: () => void;
+}
+
+export function QubeSidebar({
+  projects,
+  threads,
+  activeThreadId,
+  activeProjectId,
+  activeToolId,
+  onSelectThread,
+  onSelectProject,
+  onNewChat,
+  onNewProject,
+}: QubeSidebarProps) {
+  const { state, toggleSidebar } = useSidebar();
+  const collapsed = state === "collapsed";
+  const activeProject = projects.find((p) => p.id === activeProjectId);
+  const activeTool = tools.find((t) => t.id === activeToolId) ?? tools[0];
+  const projectThreads = threads.filter((t) => t.projectId === activeProjectId);
+
+  return (
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
         <SidebarHeader className="border-b border-sidebar-border p-0">
           <div className={cn("flex items-center gap-2 px-3 h-14", collapsed && "justify-center px-2")}>
             {!collapsed && (
