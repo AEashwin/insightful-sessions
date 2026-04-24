@@ -49,41 +49,14 @@ const tools: Tool[] = [
   { id: "fc", name: "Forecaster", short: "FC", icon: BarChart3, enabled: false },
 ];
 
-interface QubeSidebarProps {
-  projects: Project[];
-  threads: ChatThread[];
-  activeThreadId: string;
-  activeProjectId: string;
+interface ToolRailProps {
   activeToolId: string;
-  onSelectThread: (id: string) => void;
-  onSelectProject: (id: string) => void;
   onSelectTool: (id: string) => void;
-  onNewChat: () => void;
-  onNewProject: () => void;
 }
 
-export function QubeSidebar({
-  projects,
-  threads,
-  activeThreadId,
-  activeProjectId,
-  activeToolId,
-  onSelectThread,
-  onSelectProject,
-  onSelectTool,
-  onNewChat,
-  onNewProject,
-}: QubeSidebarProps) {
-  const { state, toggleSidebar } = useSidebar();
-  const collapsed = state === "collapsed";
-  const activeProject = projects.find((p) => p.id === activeProjectId);
-  const activeTool = tools.find((t) => t.id === activeToolId) ?? tools[0];
-  const projectThreads = threads.filter((t) => t.projectId === activeProjectId);
-
+export function ToolRail({ activeToolId, onSelectTool }: ToolRailProps) {
   return (
-    <div className="flex h-screen shrink-0">
-      {/* Tool rail — always visible */}
-      <div className="w-12 bg-navy flex flex-col items-center py-3 gap-1 border-r border-sidebar-border">
+    <div className="w-12 bg-navy flex flex-col items-center py-3 gap-1 border-r border-sidebar-border shrink-0 h-screen">
         <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center mb-2">
           <Sparkles size={14} className="text-primary-foreground" />
         </div>
