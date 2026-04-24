@@ -84,20 +84,22 @@ const seededMessages: Message[] = [
   },
 ];
 
-const cardMap: Record<CardKey, React.FC> = {
-  project: ProjectSummaryCard,
-  selector: ProjectSelectorCard,
-  upload: DataUploadCard,
-  groups: VariableGroupsCard,
-  properties: VariablePropertiesCard,
-  mapping: SpendMappingCard,
-  transformations: ModelTransformationsCard,
-  results: ModelResultsCard,
-  summary: ModelSummaryCard,
-  optimisation: OptimisationCard,
-  flighting: FlightingCard,
-  workflow: WorkflowCard,
-  classification: ClassificationCard,
+const renderCard = (key: CardKey, ctx: { onPickProject?: (id: string, name: string) => void }) => {
+  switch (key) {
+    case "project": return <ProjectSummaryCard />;
+    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
+    case "upload": return <DataUploadCard />;
+    case "groups": return <VariableGroupsCard />;
+    case "properties": return <VariablePropertiesCard />;
+    case "mapping": return <SpendMappingCard />;
+    case "transformations": return <ModelTransformationsCard />;
+    case "results": return <ModelResultsCard />;
+    case "summary": return <ModelSummaryCard />;
+    case "optimisation": return <OptimisationCard />;
+    case "flighting": return <FlightingCard />;
+    case "workflow": return <WorkflowCard />;
+    case "classification": return <ClassificationCard />;
+  }
 };
 
 const toolNames: Record<string, string> = {
