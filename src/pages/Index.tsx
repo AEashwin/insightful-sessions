@@ -253,6 +253,7 @@ const Index = () => {
           activeThreadTitle={activeThread?.title}
           onSend={handleSend}
           onPickProject={handlePickProject}
+          onCreateProject={handleCreateProject}
           userName="John"
         />
       </div>
@@ -282,6 +283,7 @@ interface ChatStageProps {
   activeThreadTitle?: string;
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
+  onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
   userName: string;
 }
 
@@ -294,6 +296,7 @@ function ChatStage({
   activeThreadTitle,
   onSend,
   onPickProject,
+  onCreateProject,
   userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
