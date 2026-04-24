@@ -78,6 +78,21 @@ export function OptimisationCard() {
           </div>
         </div>
 
+        {(narration || narrating) && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 flex gap-2">
+            <div className="h-5 w-5 rounded-md bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
+              {narrating ? (
+                <Loader2 size={11} className="text-primary animate-spin" />
+              ) : (
+                <Sparkles size={11} className="text-primary" />
+              )}
+            </div>
+            <p className="text-[11px] text-foreground/85 leading-relaxed">
+              {narration || "Analysing scenario…"}
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2.5">
           {channels.map((c, i) => {
             const delta = c.optimised - c.current;
