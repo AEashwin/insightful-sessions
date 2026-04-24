@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, MoreHorizontal } from "lucide-react";
-import { ChatSidebar, type ChatThread, type Project } from "@/components/chat/ChatSidebar";
+import { Share2, MoreHorizontal, PanelLeft, ChevronRight, Sparkles } from "lucide-react";
+import { QubeSidebar, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
@@ -16,9 +16,9 @@ import { OptimisationCard } from "@/components/chat/cards/OptimisationCard";
 import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Sparkles } from "lucide-react";
 
 type CardKey =
   | "project"
@@ -65,7 +65,7 @@ const seededMessages: Message[] = [
   {
     id: "m2",
     role: "assistant",
-    text: "Welcome to DD 3.0. Pick a project to resume or create a new one — you can filter by market.",
+    text: "Welcome to Demand Drivers. Pick a project to resume or create a new one — you can filter by market.",
     card: "selector",
   },
   { id: "m3", role: "user", text: "Resume Demo_Brand4_2025." },
@@ -99,7 +99,14 @@ const cardMap: Record<CardKey, React.FC> = {
   classification: ClassificationCard,
 };
 
+const toolNames: Record<string, string> = {
+  dd: "Demand Drivers",
+  ps: "PriceSense",
+  fc: "Forecaster",
+};
+
 const Index = () => {
+  const [activeToolId, setActiveToolId] = useState("dd");
   const [activeProjectId, setActiveProjectId] = useState("1");
   const [activeThreadId, setActiveThreadId] = useState("t1");
   const [messages, setMessages] = useState<Message[]>(seededMessages);
@@ -111,6 +118,7 @@ const Index = () => {
   }, [messages, thinking]);
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
+  const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const handleSend = async (text: string) => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
@@ -157,11 +165,24 @@ const Index = () => {
   };
 
   const handleNewChat = () => {
+    setActiveThreadId("");
     setMessages([
       {
         id: "welcome",
         role: "assistant",
-        text: "New chat. What would you like to do? I can show projects, upload data, set variable groups, run a model, or jump to optimisation.",
+        text: `New chat in **${activeProject?.name}**. What would you like to do? I can show projects, upload data, set variable groups, run a model, or jump to optimisation.`,
+        card: "selector",
+      },
+    ]);
+  };
+
+  const handleNewProject = () => {
+    setActiveThreadId("");
+    setMessages([
+      {
+        id: "np1",
+        role: "assistant",
+        text: "Let's set up a new project. Pick a brand, market and KPI to get started — or describe it to me in chat.",
         card: "selector",
       },
     ]);
@@ -174,70 +195,81 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <ChatSidebar
-        projects={projects}
-        threads={threads}
-        activeThreadId={activeThreadId}
-        activeProjectId={activeProjectId}
-        onSelectThread={handleSelectThread}
-        onSelectProject={setActiveProjectId}
-        onNewChat={handleNewChat}
-      />
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex h-screen w-full bg-background">
+        <QubeSidebar
+          projects={projects}
+          threads={threads}
+          activeThreadId={activeThreadId}
+          activeProjectId={activeProjectId}
+          activeToolId={activeToolId}
+          onSelectThread={handleSelectThread}
+          onSelectProject={setActiveProjectId}
+          onSelectTool={setActiveToolId}
+          onNewChat={handleNewChat}
+          onNewProject={handleNewProject}
+        />
 
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/80 backdrop-blur-sm">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {activeThread?.title || "New chat"}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {projects.find((p) => p.id === activeProjectId)?.name}
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
-            <button className="p-2 rounded-md hover:bg-muted transition-colors">
-              <Share2 size={14} className="text-muted-foreground" />
-            </button>
-            <button className="p-2 rounded-md hover:bg-muted transition-colors">
-              <MoreHorizontal size={14} className="text-muted-foreground" />
-            </button>
-          </div>
-        </header>
+        <main className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0 bg-background/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground" />
+              <div className="h-5 w-px bg-border mx-1" />
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-1.5 text-xs min-w-0">
+                <span className="text-muted-foreground">{toolNames[activeToolId]}</span>
+                <ChevronRight size={12} className="text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground truncate">{activeProject?.name}</span>
+                <ChevronRight size={12} className="text-muted-foreground shrink-0" />
+                <span className="font-semibold text-foreground truncate">
+                  {activeThread?.title || "New chat"}
+                </span>
+              </nav>
+            </div>
+            <div className="flex items-center gap-1">
+              <button className="p-2 rounded-md hover:bg-muted transition-colors">
+                <Share2 size={14} className="text-muted-foreground" />
+              </button>
+              <button className="p-2 rounded-md hover:bg-muted transition-colors">
+                <MoreHorizontal size={14} className="text-muted-foreground" />
+              </button>
+            </div>
+          </header>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
-            {messages.map((m) => {
-              const CardComp = m.card ? cardMap[m.card] : null;
-              return (
-                <ChatMessage key={m.id} role={m.role}>
-                  {m.text && <p>{renderText(m.text)}</p>}
-                  {CardComp && (
-                    <div className="mt-2">
-                      <CardComp />
-                    </div>
-                  )}
-                </ChatMessage>
-              );
-            })}
-            {thinking && (
-              <div className="flex gap-4">
-                <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles size={14} className="text-primary animate-pulse" />
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+              {messages.map((m) => {
+                const CardComp = m.card ? cardMap[m.card] : null;
+                return (
+                  <ChatMessage key={m.id} role={m.role}>
+                    {m.text && <p>{renderText(m.text)}</p>}
+                    {CardComp && (
+                      <div className="mt-2">
+                        <CardComp />
+                      </div>
+                    )}
+                  </ChatMessage>
+                );
+              })}
+              {thinking && (
+                <div className="flex gap-4">
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles size={14} className="text-primary animate-pulse" />
+                  </div>
+                  <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                  </div>
                 </div>
-                <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        <ChatComposer onSend={handleSend} />
-      </main>
-    </div>
+          <ChatComposer onSend={handleSend} />
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
