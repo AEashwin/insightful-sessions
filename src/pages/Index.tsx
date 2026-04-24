@@ -259,6 +259,8 @@ interface ChatStageProps {
   activeProjectName?: string;
   activeThreadTitle?: string;
   onSend: (text: string) => void;
+  onPickProject: (id: string, name: string) => void;
+  userName: string;
 }
 
 function ChatStage({
@@ -269,11 +271,15 @@ function ChatStage({
   activeProjectName,
   activeThreadTitle,
   onSend,
+  onPickProject,
+  userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  // Wider stage when sidebar is collapsed — gives MCP cards more room.
   const widthClass = collapsed ? "max-w-5xl" : "max-w-3xl";
+
+  // Landing mode: no messages yet — show centered greeting + tiles + composer.
+  const isLanding = messages.length === 0;
 
   return (
     <main className="flex-1 flex flex-col min-w-0">
@@ -301,37 +307,40 @@ function ChatStage({
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className={`${widthClass} mx-auto px-6 py-8 space-y-8 transition-[max-width] duration-200 ease-linear`}>
-          {messages.map((m) => {
-            const CardComp = m.card ? cardMap[m.card] : null;
-            return (
-              <ChatMessage key={m.id} role={m.role}>
-                {m.text && <p>{renderText(m.text)}</p>}
-                {CardComp && (
-                  <div className="mt-2">
-                    <CardComp />
-                  </div>
-                )}
-              </ChatMessage>
-            );
-          })}
-          {thinking && (
-            <div className="flex gap-4">
-              <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles size={14} className="text-primary animate-pulse" />
-              </div>
-              <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
-              </div>
-            </div>
-          )}
+      {isLanding ? (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0">
+            <ChatLanding userName={userName} onSuggestion={onSend} />
+          </div>
+          <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
         </div>
-      </div>
-
-      <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
+      ) : (
+        <>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div className={`${widthClass} mx-auto px-6 py-8 space-y-8 transition-[max-width] duration-200 ease-linear`}>
+              {messages.map((m) => (
+                <ChatMessage key={m.id} role={m.role}>
+                  {m.text && <p>{renderText(m.text)}</p>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject })}</div>}
+                </ChatMessage>
+              ))}
+              {thinking && (
+                <div className="flex gap-4">
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles size={14} className="text-primary animate-pulse" />
+                  </div>
+                  <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
+        </>
+      )}
     </main>
   );
 }
