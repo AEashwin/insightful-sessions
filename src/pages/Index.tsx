@@ -3,6 +3,7 @@ import { Share2, MoreHorizontal, ChevronRight, Sparkles } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
+import { ChatLanding } from "@/components/chat/ChatLanding";
 import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
 import { ProjectSelectorCard } from "@/components/chat/cards/ProjectSelectorCard";
 import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
