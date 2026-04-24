@@ -169,6 +169,7 @@ const Index = () => {
         role: "assistant",
         text: data?.preamble ?? "Got it.",
         card: card && validCards.includes(card) ? card : undefined,
+        prefill: data?.prefill ?? undefined,
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
