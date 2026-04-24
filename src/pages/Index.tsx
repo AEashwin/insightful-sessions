@@ -6,6 +6,7 @@ import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatLanding } from "@/components/chat/ChatLanding";
 import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
 import { ProjectSelectorCard } from "@/components/chat/cards/ProjectSelectorCard";
+import { NewProjectCard } from "@/components/chat/cards/NewProjectCard";
 import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
 import { VariableGroupsCard } from "@/components/chat/cards/VariableGroupsCard";
 import { VariablePropertiesCard } from "@/components/chat/cards/VariablePropertiesCard";
@@ -24,6 +25,7 @@ import { toast } from "@/hooks/use-toast";
 type CardKey =
   | "project"
   | "selector"
+  | "newProject"
   | "upload"
   | "groups"
   | "properties"
@@ -84,10 +86,17 @@ const seededMessages: Message[] = [
   },
 ];
 
-const renderCard = (key: CardKey, ctx: { onPickProject?: (id: string, name: string) => void }) => {
+const renderCard = (
+  key: CardKey,
+  ctx: {
+    onPickProject?: (id: string, name: string) => void;
+    onCreateProject?: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+  },
+) => {
   switch (key) {
     case "project": return <ProjectSummaryCard />;
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
+    case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <VariableGroupsCard />;
     case "properties": return <VariablePropertiesCard />;
@@ -151,7 +160,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","upload","groups","properties","mapping","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
@@ -179,8 +188,21 @@ const Index = () => {
       {
         id: "np1",
         role: "assistant",
-        text: "Let's set up a new project. Pick a brand, market and KPI to get started — or describe it to me in chat.",
-        card: "selector",
+        text: "Let's set up a new project. Fill in the basics below — or just describe it to me and I'll fill it in.",
+        card: "newProject",
+      },
+    ]);
+  };
+
+  const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: `u${Date.now()}`, role: "user", text: `Create project ${p.name}` },
+      {
+        id: `a${Date.now() + 1}`,
+        role: "assistant",
+        text: `Created **${p.name}** (${p.brand} · ${p.market}, KPI: ${p.kpi}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
+        card: "upload",
       },
     ]);
   };
@@ -231,6 +253,7 @@ const Index = () => {
           activeThreadTitle={activeThread?.title}
           onSend={handleSend}
           onPickProject={handlePickProject}
+          onCreateProject={handleCreateProject}
           userName="John"
         />
       </div>
@@ -260,6 +283,7 @@ interface ChatStageProps {
   activeThreadTitle?: string;
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
+  onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
   userName: string;
 }
 
@@ -272,6 +296,7 @@ function ChatStage({
   activeThreadTitle,
   onSend,
   onPickProject,
+  onCreateProject,
   userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
@@ -321,7 +346,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (
