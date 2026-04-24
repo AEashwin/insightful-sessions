@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Share2, MoreHorizontal, PanelLeft, ChevronRight, Sparkles } from "lucide-react";
-import { QubeSidebar, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
+import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
@@ -197,6 +197,7 @@ const Index = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-background">
+        <ToolRail activeToolId={activeToolId} onSelectTool={setActiveToolId} />
         <QubeSidebar
           projects={projects}
           threads={threads}
@@ -205,7 +206,6 @@ const Index = () => {
           activeToolId={activeToolId}
           onSelectThread={handleSelectThread}
           onSelectProject={setActiveProjectId}
-          onSelectTool={setActiveToolId}
           onNewChat={handleNewChat}
           onNewProject={handleNewProject}
         />
