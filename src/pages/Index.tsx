@@ -151,12 +151,13 @@ const Index = () => {
         return;
       }
 
+      const validCards: CardKey[] = ["project","selector","upload","groups","properties","mapping","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
         role: "assistant",
         text: data?.preamble ?? "Got it.",
-        card: card && cardMap[card] ? card : undefined,
+        card: card && validCards.includes(card) ? card : undefined,
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
