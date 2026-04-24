@@ -314,6 +314,6 @@ export function QubeSidebar({
           </DropdownMenu>
         </SidebarFooter>
       </Sidebar>
-    </div>
   );
 }
+
