@@ -43,6 +43,7 @@ interface Message {
   role: "user" | "assistant";
   text?: string;
   card?: CardKey;
+  prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
 }
 
 const projects: Project[] = [
@@ -91,12 +92,13 @@ const renderCard = (
   ctx: {
     onPickProject?: (id: string, name: string) => void;
     onCreateProject?: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+    prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
   },
 ) => {
   switch (key) {
     case "project": return <ProjectSummaryCard />;
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
-    case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} />;
+    case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <VariableGroupsCard />;
     case "properties": return <VariablePropertiesCard />;
@@ -167,6 +169,7 @@ const Index = () => {
         role: "assistant",
         text: data?.preamble ?? "Got it.",
         card: card && validCards.includes(card) ? card : undefined,
+        prefill: data?.prefill ?? undefined,
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
@@ -346,7 +349,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (

@@ -63,6 +63,18 @@ Always respond by calling the route_intent function.`;
                     enum: [...CARDS.map((c) => c.name), null],
                     description: "Card key to render, or null if no card is appropriate.",
                   },
+                  prefill: {
+                    type: ["object", "null"],
+                    description: "Only when card is 'newProject'. Extract any project hints from the user's message. Normalise: brand to Title Case full word (e.g. 'choc' -> 'Chocolate'), market to one of [UK, US, France, Germany, Australia, Japan, India, Brazil], BU to one of [NorthAmerica, Europe, Asia-Pac, LATAM] inferred from market, KPI to one of [Sales Volume, Revenue, Market Share, Brand Awareness, Conversions]. Generate a sensible project name like '<MARKET>_<BRAND>_<YEAR>' if user didn't give one. Omit any field the user didn't hint at.",
+                    properties: {
+                      name: { type: "string" },
+                      brand: { type: "string" },
+                      market: { type: "string" },
+                      bu: { type: "string" },
+                      kpi: { type: "string" },
+                    },
+                    additionalProperties: false,
+                  },
                 },
                 required: ["preamble", "card"],
                 additionalProperties: false,
@@ -99,17 +111,19 @@ Always respond by calling the route_intent function.`;
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     let preamble = "Got it.";
     let card: string | null = null;
+    let prefill: Record<string, string> | null = null;
     if (call?.function?.arguments) {
       try {
         const args = JSON.parse(call.function.arguments);
         preamble = args.preamble ?? preamble;
         card = args.card ?? null;
+        prefill = args.prefill ?? null;
       } catch (e) {
         console.error("Failed to parse tool args", e);
       }
     }
 
-    return new Response(JSON.stringify({ preamble, card }), {
+    return new Response(JSON.stringify({ preamble, card, prefill }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
