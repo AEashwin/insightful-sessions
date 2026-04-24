@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, MoreHorizontal, PanelLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Share2, MoreHorizontal, ChevronRight, Sparkles } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
