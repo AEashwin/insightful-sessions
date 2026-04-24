@@ -11,14 +11,15 @@ const kpis = ["Sales Volume", "Revenue", "Market Share", "Brand Awareness", "Con
 
 interface Props {
   onCreate?: (project: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+  initial?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
 }
 
-export function NewProjectCard({ onCreate }: Props = {}) {
-  const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [bu, setBu] = useState("Europe");
-  const [market, setMarket] = useState("UK");
-  const [kpi, setKpi] = useState("Sales Volume");
+export function NewProjectCard({ onCreate, initial }: Props = {}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [brand, setBrand] = useState(initial?.brand ?? "");
+  const [bu, setBu] = useState(initial?.bu ?? "Europe");
+  const [market, setMarket] = useState(initial?.market ?? "UK");
+  const [kpi, setKpi] = useState(initial?.kpi ?? "Sales Volume");
   const [notes, setNotes] = useState("");
 
   const canCreate = name.trim() && brand.trim();
