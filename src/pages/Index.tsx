@@ -3,6 +3,7 @@ import { Share2, MoreHorizontal, ChevronRight, Sparkles } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
+import { ChatLanding } from "@/components/chat/ChatLanding";
 import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
 import { ProjectSelectorCard } from "@/components/chat/cards/ProjectSelectorCard";
 import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
@@ -83,20 +84,22 @@ const seededMessages: Message[] = [
   },
 ];
 
-const cardMap: Record<CardKey, React.FC> = {
-  project: ProjectSummaryCard,
-  selector: ProjectSelectorCard,
-  upload: DataUploadCard,
-  groups: VariableGroupsCard,
-  properties: VariablePropertiesCard,
-  mapping: SpendMappingCard,
-  transformations: ModelTransformationsCard,
-  results: ModelResultsCard,
-  summary: ModelSummaryCard,
-  optimisation: OptimisationCard,
-  flighting: FlightingCard,
-  workflow: WorkflowCard,
-  classification: ClassificationCard,
+const renderCard = (key: CardKey, ctx: { onPickProject?: (id: string, name: string) => void }) => {
+  switch (key) {
+    case "project": return <ProjectSummaryCard />;
+    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
+    case "upload": return <DataUploadCard />;
+    case "groups": return <VariableGroupsCard />;
+    case "properties": return <VariablePropertiesCard />;
+    case "mapping": return <SpendMappingCard />;
+    case "transformations": return <ModelTransformationsCard />;
+    case "results": return <ModelResultsCard />;
+    case "summary": return <ModelSummaryCard />;
+    case "optimisation": return <OptimisationCard />;
+    case "flighting": return <FlightingCard />;
+    case "workflow": return <WorkflowCard />;
+    case "classification": return <ClassificationCard />;
+  }
 };
 
 const toolNames: Record<string, string> = {
@@ -148,12 +151,13 @@ const Index = () => {
         return;
       }
 
+      const validCards: CardKey[] = ["project","selector","upload","groups","properties","mapping","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
         role: "assistant",
         text: data?.preamble ?? "Got it.",
-        card: card && cardMap[card] ? card : undefined,
+        card: card && validCards.includes(card) ? card : undefined,
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
@@ -166,14 +170,7 @@ const Index = () => {
 
   const handleNewChat = () => {
     setActiveThreadId("");
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        text: `New chat in **${activeProject?.name}**. What would you like to do? I can show projects, upload data, set variable groups, run a model, or jump to optimisation.`,
-        card: "selector",
-      },
-    ]);
+    setMessages([]); // empty -> ChatLanding renders
   };
 
   const handleNewProject = () => {
@@ -192,6 +189,21 @@ const Index = () => {
     setActiveThreadId(id);
     if (id === "t1") setMessages(seededMessages);
     else handleNewChat();
+  };
+
+  const handlePickProject = (projectId: string, projectName: string) => {
+    setActiveProjectId(projectId);
+    // Simulate the AI handoff — in production this comes from chat-route.
+    setMessages((prev) => [
+      ...prev,
+      { id: `u${Date.now()}`, role: "user", text: `Open ${projectName}` },
+      {
+        id: `a${Date.now() + 1}`,
+        role: "assistant",
+        text: `Switching you into **${projectName}**. You're at **stage 7 of 9 — Model Interpretation**, with 3 models run on Batch 2. Here's a snapshot — ready to resume, or want to start something fresh?`,
+        card: "project",
+      },
+    ]);
   };
 
   return (
@@ -218,6 +230,8 @@ const Index = () => {
           activeProjectName={activeProject?.name}
           activeThreadTitle={activeThread?.title}
           onSend={handleSend}
+          onPickProject={handlePickProject}
+          userName="John"
         />
       </div>
     </SidebarProvider>
@@ -245,6 +259,8 @@ interface ChatStageProps {
   activeProjectName?: string;
   activeThreadTitle?: string;
   onSend: (text: string) => void;
+  onPickProject: (id: string, name: string) => void;
+  userName: string;
 }
 
 function ChatStage({
@@ -255,11 +271,15 @@ function ChatStage({
   activeProjectName,
   activeThreadTitle,
   onSend,
+  onPickProject,
+  userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  // Wider stage when sidebar is collapsed — gives MCP cards more room.
   const widthClass = collapsed ? "max-w-5xl" : "max-w-3xl";
+
+  // Landing mode: no messages yet — show centered greeting + tiles + composer.
+  const isLanding = messages.length === 0;
 
   return (
     <main className="flex-1 flex flex-col min-w-0">
@@ -287,37 +307,40 @@ function ChatStage({
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className={`${widthClass} mx-auto px-6 py-8 space-y-8 transition-[max-width] duration-200 ease-linear`}>
-          {messages.map((m) => {
-            const CardComp = m.card ? cardMap[m.card] : null;
-            return (
-              <ChatMessage key={m.id} role={m.role}>
-                {m.text && <p>{renderText(m.text)}</p>}
-                {CardComp && (
-                  <div className="mt-2">
-                    <CardComp />
-                  </div>
-                )}
-              </ChatMessage>
-            );
-          })}
-          {thinking && (
-            <div className="flex gap-4">
-              <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles size={14} className="text-primary animate-pulse" />
-              </div>
-              <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
-              </div>
-            </div>
-          )}
+      {isLanding ? (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0">
+            <ChatLanding userName={userName} onSuggestion={onSend} />
+          </div>
+          <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
         </div>
-      </div>
-
-      <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
+      ) : (
+        <>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div className={`${widthClass} mx-auto px-6 py-8 space-y-8 transition-[max-width] duration-200 ease-linear`}>
+              {messages.map((m) => (
+                <ChatMessage key={m.id} role={m.role}>
+                  {m.text && <p>{renderText(m.text)}</p>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject })}</div>}
+                </ChatMessage>
+              ))}
+              {thinking && (
+                <div className="flex gap-4">
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles size={14} className="text-primary animate-pulse" />
+                  </div>
+                  <div className="flex-1 pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <ChatComposer onSend={onSend} maxWidthClass={widthClass} />
+        </>
+      )}
     </main>
   );
 }
