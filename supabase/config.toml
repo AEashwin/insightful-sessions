@@ -1,1 +1,7 @@
 project_id = "hxwhqxzgrmxouzvdivrx"
+
+[functions.chat-route]
+verify_jwt = false
+
+[functions.card-insights]
+verify_jwt = false
