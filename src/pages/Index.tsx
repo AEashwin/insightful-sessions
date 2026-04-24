@@ -92,12 +92,13 @@ const renderCard = (
   ctx: {
     onPickProject?: (id: string, name: string) => void;
     onCreateProject?: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+    prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
   },
 ) => {
   switch (key) {
     case "project": return <ProjectSummaryCard />;
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
-    case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} />;
+    case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <VariableGroupsCard />;
     case "properties": return <VariablePropertiesCard />;
