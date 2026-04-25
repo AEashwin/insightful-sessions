@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 interface GroupNode {
   id: string;
   name: string;
-  variables: string[];
+  variables?: string[];
+  children?: GroupNode[];
 }
 
 interface Bucket {
@@ -19,21 +20,8 @@ interface Bucket {
 
 const initialBuckets: Bucket[] = [
   { id: "time", title: "Time", icon: "◷", groups: [{ id: "time-week", name: "", variables: ["monthEnding", "weekEnding"] }] },
-  { id: "dependent", title: "Dependent variable", icon: "🎯", groups: [{ id: "dep-sales", name: "", variables: ["Sales_Volume", "Revenue"] }] },
   { id: "dimension", title: "Dimension", icon: "◩", groups: [{ id: "dim-core", name: "", variables: ["Region", "Brand"] }] },
-  {
-    id: "incremental",
-    title: "Incremental",
-    icon: "↗",
-    groups: [
-      { id: "inc-tv", name: "Media > TV", variables: ["TV_SB1_GRPs", "TV_SB1_Imps", "TV_SB1_Spnd", "Halo_TV_GRPs", "Halo_TV_Spnd"] },
-      { id: "inc-meta", name: "Media > Meta", variables: ["Meta_SB1_Imps", "Meta_SB1_Clicks", "Meta_SB1_Spnd", "Meta_SB2_Imps", "Meta_SB2_Spnd"] },
-      { id: "inc-dv360", name: "Media > DV360", variables: ["DV360_SB1_YTProg_Imps", "DV360_SB1_YTProg_Spnd", "DV360_SB1_Display_Imps"] },
-      { id: "inc-youtube", name: "Media > YouTube", variables: ["YouTube_Views", "YouTube_Spnd"] },
-      { id: "inc-trade", name: "Non_Media > Trade", variables: ["TradeScheme_Nts_Amt", "TradeScheme_Nts_Vol"] },
-      { id: "inc-promo", name: "Non_Media > Promo", variables: ["Promo_Flag", "Leaflet_Drops"] },
-    ],
-  },
+  { id: "dependent", title: "Dependent variable", icon: "🎯", groups: [{ id: "dep-sales", name: "", variables: ["Sales_Volume", "Revenue"] }] },
   {
     id: "base",
     title: "Base",
@@ -41,9 +29,53 @@ const initialBuckets: Bucket[] = [
     groups: [
       { id: "base-price", name: "Price", variables: ["Nielsen_Price_SB1", "Nielsen_Price_SB2"] },
       { id: "base-dist", name: "Distribution", variables: ["Nielsen_WD_SB1", "Nielsen_WD_SB2"] },
-      { id: "base-events", name: "Baseline > Events", variables: ["Holiday_Flag", "Election_Flag"] },
-      { id: "base-trend", name: "Baseline > Trend", variables: ["Category_Trend"] },
-      { id: "base-comp", name: "Baseline > Comp", variables: ["Comp_TV_GRPs", "Comp_TV_Spnd"] },
+      {
+        id: "base-baseline",
+        name: "Baseline",
+        children: [
+          { id: "base-events", name: "Events", variables: ["Holiday_Flag", "Election_Flag"] },
+          { id: "base-trend", name: "Trend", variables: ["Category_Trend"] },
+          { id: "base-comp", name: "Comp", variables: ["Comp_TV_GRPs", "Comp_TV_Spnd"] },
+        ],
+      },
+    ],
+  },
+  {
+    id: "incremental",
+    title: "Incremental",
+    icon: "↗",
+    groups: [
+      {
+        id: "inc-media",
+        name: "Media",
+        children: [
+          {
+            id: "inc-traditional",
+            name: "Traditional",
+            children: [
+              { id: "inc-tv", name: "TV", variables: ["TV_SB1_GRPs", "TV_SB1_Imps", "TV_SB1_Spnd", "Halo_TV_GRPs", "Halo_TV_Spnd"] },
+              { id: "inc-print", name: "Print", variables: ["Print_Insertions", "Print_Spnd"] },
+            ],
+          },
+          {
+            id: "inc-digital",
+            name: "Digital",
+            children: [
+              { id: "inc-meta", name: "Meta", variables: ["Meta_SB1_Imps", "Meta_SB1_Clicks", "Meta_SB1_Spnd", "Meta_SB2_Imps", "Meta_SB2_Spnd"] },
+              { id: "inc-youtube", name: "YouTube", variables: ["YouTube_Views", "YouTube_Spnd"] },
+              { id: "inc-dv360", name: "DV360", variables: ["DV360_SB1_YTProg_Imps", "DV360_SB1_YTProg_Spnd", "DV360_SB1_Display_Imps"] },
+            ],
+          },
+        ],
+      },
+      {
+        id: "inc-non-media",
+        name: "Non_Media",
+        children: [
+          { id: "inc-trade", name: "Trade", variables: ["TradeScheme_Nts_Amt", "TradeScheme_Nts_Vol"] },
+          { id: "inc-promo", name: "Promo", variables: ["Promo_Flag", "Leaflet_Drops"] },
+        ],
+      },
     ],
   },
   {
@@ -54,22 +86,55 @@ const initialBuckets: Bucket[] = [
   },
 ];
 
-const parentOptions = ["Incremental", "Incremental > Media", "Incremental > Non_Media", "Incremental > Media > Traditional", "Incremental > Media > Digital", "Base", "Base > Baseline"];
+const parentOptions = [
+  "Incremental",
+  "Incremental > Media",
+  "Incremental > Media > Traditional",
+  "Incremental > Media > Digital",
+  "Incremental > Non_Media",
+  "Base",
+  "Base > Baseline",
+];
+
+const countNode = (node: GroupNode): number => (node.variables?.length ?? 0) + (node.children?.reduce((sum, child) => sum + countNode(child), 0) ?? 0);
+const countBucket = (bucket: Bucket) => bucket.groups.reduce((sum, group) => sum + countNode(group), 0);
+
+const removeVariables = (nodes: GroupNode[], variables: string[]): GroupNode[] =>
+  nodes.map((node) => ({
+    ...node,
+    variables: node.variables?.filter((variable) => !variables.includes(variable)),
+    children: node.children ? removeVariables(node.children, variables) : undefined,
+  }));
+
+const addVariablesToGroup = (nodes: GroupNode[], groupId: string, variables: string[]): GroupNode[] =>
+  nodes.map((node) =>
+    node.id === groupId
+      ? { ...node, variables: Array.from(new Set([...(node.variables ?? []), ...variables])) }
+      : { ...node, children: node.children ? addVariablesToGroup(node.children, groupId, variables) : undefined },
+  );
+
+const groupLabel = (nodes: GroupNode[], groupId: string): string | null => {
+  for (const node of nodes) {
+    if (node.id === groupId) return node.name || "root";
+    const child = node.children ? groupLabel(node.children, groupId) : null;
+    if (child) return `${node.name}${node.name ? " > " : ""}${child}`;
+  }
+  return null;
+};
 
 export function ClassificationCard() {
   const [buckets, setBuckets] = useState(initialBuckets);
   const [selected, setSelected] = useState<string[]>([]);
   const [newGroupFor, setNewGroupFor] = useState<string | null>(null);
-  const [newGroupParent, setNewGroupParent] = useState(parentOptions[0]);
+  const [newGroupParent, setNewGroupParent] = useState(parentOptions[1]);
   const [newGroupName, setNewGroupName] = useState("");
   const [changeLog, setChangeLog] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
 
   const counts = useMemo(() => {
-    const bucketCount = (bucket: Bucket) => bucket.groups.reduce((sum, group) => sum + group.variables.length, 0);
-    const total = buckets.reduce((sum, bucket) => sum + bucketCount(bucket), 0);
-    const unresolved = bucketCount(buckets.find((bucket) => bucket.id === "unclassified")!);
-    return { total, classified: total - unresolved, unresolved, bucketCount };
+    const total = buckets.reduce((sum, bucket) => sum + countBucket(bucket), 0);
+    const unresolved = countBucket(buckets.find((bucket) => bucket.id === "unclassified")!);
+    return { total, classified: total - unresolved, unresolved, bucketCount: countBucket };
   }, [buckets]);
 
   const toggleVariable = (name: string) => {
@@ -80,19 +145,16 @@ export function ClassificationCard() {
     const variables = incoming?.length ? incoming : selected;
     if (!variables.length) return;
 
+    const targetBucket = buckets.find((bucket) => bucket.id === targetBucketId);
+    const targetLabel = targetBucket ? groupLabel(targetBucket.groups, targetGroupId) : targetGroupId;
+
     setBuckets((current) =>
       current.map((bucket) => ({
         ...bucket,
-        groups: bucket.groups.map((group) => ({
-          ...group,
-          variables:
-            group.id === targetGroupId && bucket.id === targetBucketId
-              ? Array.from(new Set([...group.variables, ...variables]))
-              : group.variables.filter((variable) => !variables.includes(variable)),
-        })),
+        groups: addVariablesToGroup(removeVariables(bucket.groups, variables), bucket.id === targetBucketId ? targetGroupId : "", variables),
       })),
     );
-    setChangeLog((current) => [...current, `Moved ${variables.length} column${variables.length > 1 ? "s" : ""} to ${targetGroupId.replace(/^(inc|base|time|dep|dim|unclassified)-/, "")}`]);
+    setChangeLog((current) => [...current, `Moved ${variables.length} column${variables.length > 1 ? "s" : ""} to ${targetLabel}`]);
     setSelected([]);
     setConfirmed(false);
   };
@@ -104,17 +166,7 @@ export function ClassificationCard() {
     setBuckets((current) =>
       current.map((bucket) =>
         bucket.id === newGroupFor
-          ? {
-              ...bucket,
-              groups: [
-                ...bucket.groups,
-                {
-                  id: `${bucket.id}-${Date.now()}`,
-                  name: newGroupParent.includes(bucket.title) ? name : `${newGroupParent.split(" > ").slice(1).join(" > ")} > ${name}`.replace(/^ > /, ""),
-                  variables: [],
-                },
-              ],
-            }
+          ? { ...bucket, groups: [...bucket.groups, { id: `${bucket.id}-${Date.now()}`, name: `${newGroupParent.split(" > ").slice(1).join(" > ")} > ${name}`.replace(/^ > /, ""), variables: [] }] }
           : bucket,
       ),
     );
@@ -149,13 +201,13 @@ export function ClassificationCard() {
       </div>
 
       <div className="grid gap-2 bg-muted/30 p-3 lg:grid-cols-3">
-        {buckets.slice(0, 3).map((bucket) => (
+        {[buckets[0], buckets[1], buckets[2]].map((bucket) => (
           <BucketPanel key={bucket.id} bucket={bucket} count={counts.bucketCount(bucket)} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
         ))}
       </div>
 
       <div className="grid gap-2 bg-muted/30 px-3 pb-2 lg:grid-cols-2">
-        {buckets.slice(3, 5).map((bucket) => (
+        {[buckets[3], buckets[4]].map((bucket) => (
           <BucketPanel
             key={bucket.id}
             bucket={bucket}
@@ -222,16 +274,19 @@ function BucketPanel({ bucket, count, selected, onToggle, onMove, onNewGroup, co
           <Badge variant="outline" className="h-5 bg-muted/40 text-[10px]">{count}</Badge>
         </div>
       </div>
-      <div className={`space-y-2 p-2 ${compact ? "min-h-[70px]" : "min-h-[324px]"}`}>
+      <div className={`space-y-1 p-2 ${compact ? "min-h-[70px]" : "min-h-[324px]"}`}>
         {bucket.groups.map((group) => (
-          <GroupBlock key={group.id} bucketId={bucket.id} group={group} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} />
+          <GroupBlock key={group.id} bucketId={bucket.id} group={group} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} depth={0} />
         ))}
       </div>
     </section>
   );
 }
 
-function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact }: { bucketId: string; group: GroupNode; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; compact: boolean }) {
+function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact, depth }: { bucketId: string; group: GroupNode; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; compact: boolean; depth: number }) {
+  const hasChildren = !!group.children?.length;
+  const count = countNode(group);
+
   return (
     <div
       className="rounded-md border border-transparent p-1 transition-colors hover:border-primary/30 hover:bg-muted/30"
@@ -243,15 +298,24 @@ function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact }: { 
       }}
     >
       {group.name && (
-        <button type="button" onClick={() => onMove(bucketId, group.id)} className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-foreground hover:text-primary">
-          <ChevronDown size={10} /> {group.name} <span className="text-muted-foreground">{group.variables.length}</span>
+        <button type="button" onClick={() => onMove(bucketId, group.id)} className="mb-1 flex w-full items-center gap-1 rounded-sm py-0.5 text-left text-[11px] font-semibold text-foreground hover:text-primary" style={{ paddingLeft: `${depth * 10}px` }}>
+          <ChevronDown size={10} className="text-muted-foreground" /> {group.name} <span className="ml-auto text-muted-foreground">{count}</span>
         </button>
       )}
-      <div className="flex flex-wrap gap-1.5">
-        {group.variables.map((variable) => (
-          <VariableChip key={variable} name={variable} selected={selected.includes(variable)} onToggle={onToggle} compact={compact} selectedSet={selected} />
-        ))}
-      </div>
+      {hasChildren && (
+        <div className="space-y-1">
+          {group.children!.map((child) => (
+            <GroupBlock key={child.id} bucketId={bucketId} group={child} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+      {!!group.variables?.length && (
+        <div className="flex flex-wrap gap-1.5" style={{ paddingLeft: group.name ? `${(depth + 1) * 10}px` : undefined }}>
+          {group.variables.map((variable) => (
+            <VariableChip key={variable} name={variable} selected={selected.includes(variable)} onToggle={onToggle} compact={compact} selectedSet={selected} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
