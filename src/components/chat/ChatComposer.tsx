@@ -39,18 +39,18 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidt
   return (
     <div className="px-6 pb-6 pt-2 bg-gradient-to-t from-background via-background to-transparent">
       <div className={`${maxWidthClass} mx-auto transition-[max-width] duration-200 ease-linear`}>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              onClick={() => onSend(s)}
-              className="px-2.5 py-1 rounded-full border border-border bg-card text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
         <div className="rounded-2xl border border-border bg-card shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+          <div className="flex flex-wrap gap-1.5 px-3 pt-3 pb-2 border-b border-border/60">
+            {suggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => onSend(s)}
+                className="px-2.5 py-1 rounded-full border border-border bg-muted/30 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
           <textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
