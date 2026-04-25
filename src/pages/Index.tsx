@@ -18,6 +18,7 @@ import { OptimisationCard } from "@/components/chat/cards/OptimisationCard";
 import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
+import { Input } from "@/components/ui/input";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
