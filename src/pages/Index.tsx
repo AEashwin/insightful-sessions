@@ -328,7 +328,7 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Classification is locked. Next logical step is **Spend Mapping** — review mapped, missing, and spend-only variables in one view before moving into variable properties.",
+        text: "Classification is locked. Next is **Spend Mapping**. Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
         card: "mapping",
       },
     ]);
