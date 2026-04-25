@@ -311,10 +311,10 @@ function ChatStage({
 
   return (
     <main className="flex-1 flex flex-col min-w-0">
-      <header className="h-14 border-b border-border flex items-center justify-between px-4 shrink-0 bg-background/80 backdrop-blur-sm">
+      <header className="h-10 border-b border-border flex items-center justify-between px-3 shrink-0 bg-background/80 backdrop-blur-sm">
         <div className="flex items-center gap-2 min-w-0">
-          <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-foreground" />
-          <div className="h-5 w-px bg-border mx-1" />
+          <SidebarTrigger className="h-7 w-7 text-muted-foreground hover:text-foreground" />
+          <div className="h-4 w-px bg-border" />
           <nav className="flex items-center gap-1.5 text-xs min-w-0">
             <span className="text-muted-foreground">{activeToolName}</span>
             <ChevronRight size={12} className="text-muted-foreground shrink-0" />
@@ -326,10 +326,10 @@ function ChatStage({
           </nav>
         </div>
         <div className="flex items-center gap-1">
-          <button className="p-2 rounded-md hover:bg-muted transition-colors">
+          <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
             <Share2 size={14} className="text-muted-foreground" />
           </button>
-          <button className="p-2 rounded-md hover:bg-muted transition-colors">
+          <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
             <MoreHorizontal size={14} className="text-muted-foreground" />
           </button>
         </div>
@@ -345,7 +345,7 @@ function ChatStage({
       ) : (
         <>
           <div ref={scrollRef} className="flex-1 overflow-y-auto">
-            <div className={`${widthClass} mx-auto px-6 py-8 space-y-8 transition-[max-width] duration-200 ease-linear`}>
+            <div className={`${widthClass} mx-auto px-6 py-5 space-y-6 transition-[max-width] duration-200 ease-linear`}>
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
