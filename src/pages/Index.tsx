@@ -175,6 +175,7 @@ const Index = () => {
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [palette, setPalette] = useState<ColorPalette>("purple");
   const [chain, setChain] = useState<SkillChainState>({ active: false, step: 0, currentBatch: 1 });
+  const [modelRunPending, setModelRunPending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -209,6 +210,21 @@ const Index = () => {
     const history = [...messages, userMsg];
     setMessages(history);
 
+    if (modelRunPending && /\b(ok|okay|yes|approve|approved|confirm|confirmed|go ahead|proceed)\b/i.test(text)) {
+      setModelRunPending(false);
+      setMessages([
+        ...history,
+        {
+          id: `a${Date.now() + 1}`,
+          role: "assistant",
+          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll continue once the run outputs are available.",
+        },
+      ]);
+      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
+      setThinking(false);
+      return;
+    }
+
     const isSpendConfirmation = /\b(confirm|confirmed|approve|approved|done|proceed)\b/i.test(text)
       && messages.slice().reverse().some((message) => message.role === "assistant" && message.card === "mapping");
     if (isSpendConfirmation) {
@@ -239,7 +255,7 @@ const Index = () => {
         {
           id: `a${Date.now() + 1}`,
           role: "assistant",
-          text: "Here is **Model Configuration**. You can edit KPI, model type/form, duration, holdout, selected variables, transformations, priors, and QC directly in the UI. Use View transformations / priors / QC to expose those editable settings.",
+          text: "Here is **Model Configuration**. You can edit KPI, model type/form, duration, holdout, selected variables, role, transformations, saturation, priors, and QC directly in the UI. Use View transformations / saturation / priors / QC to expose those editable settings.",
           card: "configuration",
         },
       ]);
