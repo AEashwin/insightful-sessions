@@ -88,6 +88,76 @@
     --navy: 252 40% 16%;
     --navy-foreground: 0 0% 100%;
   }
+
+  :root[data-palette="analyst"] {
+    --primary: 184 76% 31%;
+    --ring: 184 76% 31%;
+    --accent: 38 92% 94%;
+    --accent-foreground: 33 78% 26%;
+    --sidebar-background: 185 28% 96%;
+    --sidebar-primary: 184 76% 31%;
+    --sidebar-accent: 184 58% 91%;
+    --sidebar-accent-foreground: 184 78% 21%;
+    --success: 152 66% 34%;
+    --warning: 32 95% 49%;
+    --navy: 211 53% 17%;
+  }
+
+  :root[data-palette="cockpit"] {
+    --primary: 193 95% 42%;
+    --ring: 193 95% 42%;
+    --accent: 193 72% 93%;
+    --accent-foreground: 200 85% 24%;
+    --sidebar-background: 215 32% 95%;
+    --sidebar-primary: 193 95% 42%;
+    --sidebar-accent: 211 70% 92%;
+    --sidebar-accent-foreground: 214 70% 25%;
+    --success: 160 70% 34%;
+    --warning: 45 94% 48%;
+    --navy: 215 44% 13%;
+  }
+
+  :root.dark[data-palette="analyst"] {
+    --background: 190 28% 8%;
+    --foreground: 180 18% 94%;
+    --card: 190 25% 11%;
+    --popover: 190 25% 11%;
+    --primary: 178 74% 47%;
+    --secondary: 190 18% 16%;
+    --muted: 190 18% 16%;
+    --accent: 33 64% 22%;
+    --accent-foreground: 38 96% 78%;
+    --border: 190 18% 20%;
+    --input: 190 18% 20%;
+    --ring: 178 74% 47%;
+    --sidebar-background: 190 28% 10%;
+    --sidebar-primary: 178 74% 47%;
+    --sidebar-accent: 184 42% 18%;
+    --sidebar-accent-foreground: 178 74% 78%;
+    --sidebar-border: 190 18% 20%;
+    --navy: 190 35% 7%;
+  }
+
+  :root.dark[data-palette="cockpit"] {
+    --background: 218 35% 7%;
+    --foreground: 210 30% 96%;
+    --card: 218 31% 10%;
+    --popover: 218 31% 10%;
+    --primary: 193 95% 55%;
+    --secondary: 218 24% 15%;
+    --muted: 218 24% 15%;
+    --accent: 213 62% 18%;
+    --accent-foreground: 193 95% 80%;
+    --border: 218 20% 20%;
+    --input: 218 20% 20%;
+    --ring: 193 95% 55%;
+    --sidebar-background: 218 38% 9%;
+    --sidebar-primary: 193 95% 55%;
+    --sidebar-accent: 213 62% 18%;
+    --sidebar-accent-foreground: 193 95% 80%;
+    --sidebar-border: 218 20% 20%;
+    --navy: 222 47% 6%;
+  }
 }
 
 @layer base {
@@ -98,5 +168,17 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .palette-dot-purple {
+    background: linear-gradient(135deg, hsl(249 42% 50%), hsl(252 40% 16%));
+  }
+
+  .palette-dot-analyst {
+    background: linear-gradient(135deg, hsl(184 76% 31%), hsl(32 95% 49%));
+  }
+
+  .palette-dot-cockpit {
+    background: linear-gradient(135deg, hsl(193 95% 42%), hsl(215 44% 13%));
   }
 }
