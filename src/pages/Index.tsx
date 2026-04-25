@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { BarChart3, Check, ChevronRight, LineChart, Lock, Mail, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
+import { BarChart3, Check, ChevronRight, LineChart, Lock, Mail, Moon, Palette, Pencil, Sparkles, Sun, X } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -18,6 +18,14 @@ import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -47,6 +55,15 @@ interface Message {
   card?: CardKey;
   prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
 }
+
+type ThemeMode = "light" | "dark";
+type ColorPalette = "purple" | "analyst" | "cockpit";
+
+const paletteOptions: Array<{ id: ColorPalette; name: string; note: string }> = [
+  { id: "purple", name: "Enterprise Purple Plus", note: "Navy shell, purple core, crisp enterprise accents" },
+  { id: "analyst", name: "Colorful Analyst", note: "Teal-led workspace with warmer workflow highlights" },
+  { id: "cockpit", name: "Dark Data Cockpit", note: "Charcoal-blue platform with electric data accents" },
+];
 
 const projects: Project[] = [
   { id: "1", name: "Demo_Brand4_2025", brand: "Brand4", market: "UK" },
@@ -131,7 +148,8 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>(seededMessages);
   const [threadTitles, setThreadTitles] = useState<Record<string, string>>({});
   const [thinking, setThinking] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [palette, setPalette] = useState<ColorPalette>("purple");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -150,7 +168,8 @@ const Index = () => {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    document.documentElement.dataset.palette = palette;
+  }, [theme, palette]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -312,7 +331,10 @@ const Index = () => {
           onCreateProject={handleCreateProject}
           onNewProject={handleNewProject}
           theme={theme}
+          palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+          onThemeChange={setTheme}
+          onPaletteChange={setPalette}
           userName="John"
         />
       </div>
@@ -345,8 +367,11 @@ interface ChatStageProps {
   onPickProject: (id: string, name: string) => void;
   onCreateProject: (p: { name: string; brand: string; market: string; bu: string }) => void;
   onNewProject: () => void;
-  theme: "light" | "dark";
+  theme: ThemeMode;
+  palette: ColorPalette;
   onToggleTheme: () => void;
+  onThemeChange: (theme: ThemeMode) => void;
+  onPaletteChange: (palette: ColorPalette) => void;
   userName: string;
 }
 
@@ -363,7 +388,10 @@ function ChatStage({
   onCreateProject,
   onNewProject,
   theme,
+  palette,
   onToggleTheme,
+  onThemeChange,
+  onPaletteChange,
   userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
@@ -428,6 +456,7 @@ function ChatStage({
           </nav>
         </div>
         <div className="flex items-center gap-1">
+          <PaletteMenu palette={palette} theme={theme} onPaletteChange={onPaletteChange} onThemeChange={onThemeChange} />
           <button
             onClick={onToggleTheme}
             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
@@ -473,6 +502,60 @@ function ChatStage({
         </>
       )}
     </main>
+  );
+}
+
+function PaletteMenu({
+  palette,
+  theme,
+  onPaletteChange,
+  onThemeChange,
+}: {
+  palette: ColorPalette;
+  theme: ThemeMode;
+  onPaletteChange: (palette: ColorPalette) => void;
+  onThemeChange: (theme: ThemeMode) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          aria-label="Open platform palette settings"
+        >
+          <Palette size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel className="text-xs">Platform palette</DropdownMenuLabel>
+        <div className="grid grid-cols-2 gap-1 px-2 pb-2">
+          {(["light", "dark"] as ThemeMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => onThemeChange(mode)}
+              className={`h-8 rounded-md border text-xs font-medium transition-colors ${
+                theme === mode ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted text-muted-foreground"
+              }`}
+            >
+              {mode === "light" ? "Light" : "Dark"}
+            </button>
+          ))}
+        </div>
+        <DropdownMenuSeparator />
+        {paletteOptions.map((option) => (
+          <DropdownMenuItem key={option.id} onClick={() => onPaletteChange(option.id)} className="items-start gap-3 py-2">
+            <span className={`mt-0.5 flex h-4 w-4 rounded-full border border-border palette-dot-${option.id}`} />
+            <span className="flex-1">
+              <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                {option.name}
+                {palette === option.id && <Check size={13} className="text-primary" />}
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">{option.note}</span>
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
