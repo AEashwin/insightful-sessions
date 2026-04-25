@@ -165,6 +165,24 @@ const Index = () => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
     const history = [...messages, userMsg];
     setMessages(history);
+
+    if (/\b(create|start|set up)\b.*\bnew project\b/i.test(text)) {
+      setActiveThreadId("");
+      setMessages([
+        userMsg,
+        {
+          id: `a${Date.now() + 1}`,
+          role: "assistant",
+          text: activeProjectId
+            ? "I'll create the new project in a new chat window so it stays separate from this project session."
+            : "Let's create the new project in this new chat window.",
+          card: "newProject",
+        },
+      ]);
+      setThinking(false);
+      return;
+    }
+
     setThinking(true);
 
     try {
@@ -224,14 +242,14 @@ const Index = () => {
     ]);
   };
 
-  const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => {
+  const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string }) => {
     setMessages((prev) => [
       ...prev,
       { id: `u${Date.now()}`, role: "user", text: `Create project ${p.name}` },
       {
         id: `a${Date.now() + 1}`,
         role: "assistant",
-        text: `Created **${p.name}** (${p.brand} · ${p.market}, KPI: ${p.kpi}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
+        text: `Created **${p.name}** (${p.bu} · ${p.market} · ${p.brand}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
         card: "upload",
       },
     ]);
