@@ -79,22 +79,14 @@ export function NewProjectCard({ onCreate, initial }: Props = {}) {
       </div>
 
       <div className="p-4 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Project name</Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. UK_Chocolate_2026"
-              className="h-8 text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Selected brand</Label>
-            <div className="h-8 rounded-md border border-border bg-muted/40 px-3 flex items-center text-xs font-medium text-foreground">
-              {brand}
-            </div>
-          </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Project name</Label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. UK_Chocolate_2026"
+            className="h-8 text-xs"
+          />
         </div>
 
         <ChipRow label="BU" options={bus} value={bu} onChange={handleBuChange} />
