@@ -10,7 +10,7 @@ const rows = [
   { v: "Promo_Depth", type: "Promo", unit: "%", agg: "Mean", fill: "0", flag: null },
 ];
 
-export function VariablePropertiesCard() {
+export function VariablePropertiesCard({ onSave }: { onSave?: () => void }) {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/30">
@@ -57,7 +57,7 @@ export function VariablePropertiesCard() {
       </div>
       <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center justify-between">
         <span className="text-[11px] text-muted-foreground">1 variable needs review</span>
-        <Button size="sm" className="h-7 text-[11px]">Save properties</Button>
+        <Button size="sm" className="h-7 text-[11px]" onClick={onSave}>Save properties</Button>
       </div>
     </div>
   );
