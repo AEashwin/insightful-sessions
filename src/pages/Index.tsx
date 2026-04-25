@@ -148,7 +148,8 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>(seededMessages);
   const [threadTitles, setThreadTitles] = useState<Record<string, string>>({});
   const [thinking, setThinking] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [palette, setPalette] = useState<ColorPalette>("purple");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -167,7 +168,8 @@ const Index = () => {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    document.documentElement.dataset.palette = palette;
+  }, [theme, palette]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -329,7 +331,10 @@ const Index = () => {
           onCreateProject={handleCreateProject}
           onNewProject={handleNewProject}
           theme={theme}
+          palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+          onThemeChange={setTheme}
+          onPaletteChange={setPalette}
           userName="John"
         />
       </div>
