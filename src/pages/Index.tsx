@@ -663,7 +663,7 @@ function ChatStage({
             <div className={`${widthClass} mx-auto px-6 py-5 space-y-6 transition-[max-width] duration-200 ease-linear`}>
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
-                  {m.text && <p>{renderText(m.text)}</p>}
+                  {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
                   {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
