@@ -2,6 +2,8 @@ import { useState } from "react";
 import { CalendarDays, ChevronDown, ChevronRight, Play, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const selectedVariables = [
@@ -28,6 +30,13 @@ type DetailView = "none" | "transformations" | "priors" | "qc";
 
 export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void }) {
   const [detail, setDetail] = useState<DetailView>("none");
+  const [variables, setVariables] = useState(selectedVariables.map((row) => ({ ...row, selected: true })));
+  const [duration, setDuration] = useState({ start: "2022-01-08", end: "2025-02-22", holdoutStart: "2024-07-08", holdoutEnd: "2025-02-22" });
+  const selectedCount = variables.filter((row) => row.selected).length;
+
+  const updateVariable = (name: string, patch: Partial<(typeof variables)[number]>) => {
+    setVariables((current) => current.map((row) => (row.name === name ? { ...row, ...patch } : row)));
+  };
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -44,19 +53,17 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
           <div className="rounded-lg border border-border bg-card p-3">
             <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-foreground"><SlidersHorizontal size={13} className="text-primary" /> Model parameters</div>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              <Field label="KPI">
-                <Select defaultValue="sales"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="sales">Sales</SelectItem><SelectItem value="volume">Volume</SelectItem><SelectItem value="revenue">Revenue</SelectItem></SelectContent></Select>
-              </Field>
-              <Field label="Model type"><ValueBox>Unpooled</ValueBox></Field>
-              <Field label="Model form"><ValueBox>Additive</ValueBox></Field>
-              <Field label="Dependent variable"><ValueBox>Sales</ValueBox></Field>
+              <Field label="KPI"><Select defaultValue="sales"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="sales">Sales</SelectItem><SelectItem value="volume">Volume</SelectItem><SelectItem value="revenue">Revenue</SelectItem></SelectContent></Select></Field>
+              <Field label="Model type"><Select defaultValue="unpooled"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unpooled">Unpooled</SelectItem><SelectItem value="pooled">Pooled</SelectItem><SelectItem value="hierarchical">Hierarchical</SelectItem></SelectContent></Select></Field>
+              <Field label="Model form"><Select defaultValue="additive"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="additive">Additive</SelectItem><SelectItem value="multiplicative">Multiplicative</SelectItem><SelectItem value="log-linear">Log-linear</SelectItem></SelectContent></Select></Field>
+              <Field label="Dependent variable"><Select defaultValue="sales"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="sales">Sales</SelectItem><SelectItem value="volume">Volume</SelectItem><SelectItem value="revenue">Revenue</SelectItem></SelectContent></Select></Field>
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-3">
             <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-foreground"><CalendarDays size={13} className="text-primary" /> Duration & holdout</div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <Field label="Model duration"><ValueBox>2022-01-08 ↔ 2025-02-22</ValueBox></Field>
-              <Field label="Holdout period"><ValueBox>2024-07-08 ↔ 2025-02-22</ValueBox></Field>
+              <Field label="Model duration"><div className="grid grid-cols-2 gap-1"><Input type="date" value={duration.start} onChange={(event) => setDuration({ ...duration, start: event.target.value })} className="h-8 text-[11px]" /><Input type="date" value={duration.end} onChange={(event) => setDuration({ ...duration, end: event.target.value })} className="h-8 text-[11px]" /></div></Field>
+              <Field label="Holdout period"><div className="grid grid-cols-2 gap-1"><Input type="date" value={duration.holdoutStart} onChange={(event) => setDuration({ ...duration, holdoutStart: event.target.value })} className="h-8 text-[11px]" /><Input type="date" value={duration.holdoutEnd} onChange={(event) => setDuration({ ...duration, holdoutEnd: event.target.value })} className="h-8 text-[11px]" /></div></Field>
             </div>
           </div>
         </section>
@@ -65,7 +72,7 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
           <div className="flex flex-col gap-2 border-b border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold text-foreground">Selected modelling variables</p>
-              <p className="text-[10px] text-muted-foreground">19 of 40 classified variables selected · 16 mandatory · 3 optional</p>
+              <p className="text-[10px] text-muted-foreground">{selectedCount} of 40 classified variables selected · edit inclusion, role, transformations, priors, and QC inline</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               <DetailButton active={detail === "transformations"} label="View transformations" onClick={() => setDetail(detail === "transformations" ? "none" : "transformations")} />
