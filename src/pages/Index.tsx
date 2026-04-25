@@ -226,6 +226,13 @@ const Index = () => {
       return;
     }
 
+    const isModelRunRequest = /\b(run model|start model|execute model|run it|model run)\b/i.test(text)
+      && messages.slice().reverse().some((message) => message.role === "assistant" && message.card === "configuration");
+    if (isModelRunRequest) {
+      handleRunModel(history);
+      return;
+    }
+
     const chainReply = getSkillChainReply(text, chain);
     if (chainReply) {
       setChain(chainReply.nextState);
@@ -275,7 +282,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
@@ -357,6 +364,32 @@ const Index = () => {
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
   };
 
+  const handleVariablePropertiesSave = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `a${Date.now()}`,
+        role: "assistant",
+        text: "Variable properties saved. I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
+        card: "configuration",
+      },
+    ]);
+    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
+  };
+
+  const handleRunModel = (baseMessages = messages) => {
+    setMessages([
+      ...baseMessages,
+      {
+        id: `a${Date.now()}`,
+        role: "assistant",
+        text: "Model run completed.\n\n**Model Summary**\n\n| Item | Value |\n|---|---:|\n| Dependent variable | Sales |\n| Model duration | 08/01/2022 – 22/02/2025 |\n| Mandatory variables | 16 |\n| Optional variables | 3 |\n| Transformations used | S Curve, Adstock, Direct |\n| Model outputs generated | 3,645 |\n| Estimated processing time | 04m |\n\n**Qualifying criteria snapshot**\n\n| Criterion | Target | Status |\n|---|---:|---|\n| R² | ≥ 60% | Passed |\n| Adj-R² | ≥ 55% | Passed |\n| MAPE | ≤ 15% | Passed |\n| Holdout MAPE | ≤ 15% | Passed |\n| Durbin-Watson | 1.2–2.5 | Passed |\n\nNext I can compare model outputs, explain the selected winner, or continue the chain into model interpretation.",
+      },
+    ]);
+    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
+    setThinking(false);
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -394,6 +427,8 @@ const Index = () => {
           onCreateProject={handleCreateProject}
           onNewProject={handleNewProject}
           onClassificationConfirm={handleClassificationConfirm}
+          onVariablePropertiesSave={handleVariablePropertiesSave}
+          onRunModel={() => handleRunModel()}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
