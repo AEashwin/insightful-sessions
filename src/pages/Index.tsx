@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Share2, MoreHorizontal, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Moon, Sparkles, Sun } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -125,7 +125,12 @@ const Index = () => {
   const [activeThreadId, setActiveThreadId] = useState("t1");
   const [messages, setMessages] = useState<Message[]>(seededMessages);
   const [thinking, setThinking] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -257,6 +262,8 @@ const Index = () => {
           onSend={handleSend}
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
+          theme={theme}
+          onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
           userName="John"
         />
       </div>
@@ -287,6 +294,8 @@ interface ChatStageProps {
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
   onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+  theme: "light" | "dark";
+  onToggleTheme: () => void;
   userName: string;
 }
 
@@ -300,6 +309,8 @@ function ChatStage({
   onSend,
   onPickProject,
   onCreateProject,
+  theme,
+  onToggleTheme,
   userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
@@ -313,8 +324,6 @@ function ChatStage({
     <main className="flex-1 flex flex-col min-w-0">
       <header className="h-10 border-b border-border flex items-center justify-between px-3 shrink-0 bg-background/80 backdrop-blur-sm">
         <div className="flex items-center gap-2 min-w-0">
-          <SidebarTrigger className="h-7 w-7 text-muted-foreground hover:text-foreground" />
-          <div className="h-4 w-px bg-border" />
           <nav className="flex items-center gap-1.5 text-xs min-w-0">
             <span className="text-muted-foreground">{activeToolName}</span>
             <ChevronRight size={12} className="text-muted-foreground shrink-0" />
@@ -326,11 +335,12 @@ function ChatStage({
           </nav>
         </div>
         <div className="flex items-center gap-1">
-          <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
-            <Share2 size={14} className="text-muted-foreground" />
-          </button>
-          <button className="p-1.5 rounded-md hover:bg-muted transition-colors">
-            <MoreHorizontal size={14} className="text-muted-foreground" />
+          <button
+            onClick={onToggleTheme}
+            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
         </div>
       </header>
