@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, ChevronDown, ChevronRight, Play, Plus, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronRight, Play, Plus, SlidersHorizontal, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -7,15 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 
 const selectedVariables = [
-  { name: "TV_TotalGRPs_Own", group: "Traditional", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], gamma: ["0.50", "3.00", "0.25"], period: ["1", "8", "1"], prior: ["0", "80"] },
-  { name: "Total_Digital_Display_Impressions", group: "Digital", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], gamma: ["0.50", "3.00", "0.25"], period: ["1", "6", "1"], prior: ["0", "80"] },
-  { name: "Total_Youtube_Impressions", group: "Digital", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], gamma: ["0.50", "3.00", "0.25"], period: ["1", "6", "1"], prior: ["0", "80"] },
-  { name: "Comp1_TV_Spend", group: "Competition", transform: "Direct", decay: ["—", "—", "—"], gamma: ["—", "—", "—"], period: ["—", "—", "—"], prior: ["-80", "80"] },
-  { name: "Online_Coupon", group: "Promotion", transform: "Adstock", decay: ["0.10", "0.90", "0.20"], gamma: ["0.50", "2.50", "0.25"], period: ["1", "4", "1"], prior: ["0", "80"] },
-  { name: "Promo_Leaflets", group: "Promotion", transform: "Gamma", decay: ["0.10", "0.70", "0.10"], gamma: ["0.50", "2.00", "0.25"], period: ["1", "5", "1"], prior: ["0", "80"] },
-  { name: "Election_Day", group: "Events", transform: "Direct", decay: ["—", "—", "—"], gamma: ["—", "—", "—"], period: ["—", "—", "—"], prior: ["Fixed", "Fixed"] },
-  { name: "Holiday_Event1", group: "Events", transform: "Direct", decay: ["—", "—", "—"], gamma: ["—", "—", "—"], period: ["—", "—", "—"], prior: ["Fixed", "Fixed"] },
-  { name: "Avg_Price_Comp5", group: "Competition", transform: "Direct", decay: ["—", "—", "—"], gamma: ["—", "—", "—"], period: ["—", "—", "—"], prior: ["-80", "80"] },
+  { name: "TV_TotalGRPs_Own", group: "Traditional", role: "Mandatory", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "S-curve", contribution: "Positive", prior: ["0", "80"] },
+  { name: "Total_Digital_Display_Impressions", group: "Digital", role: "Mandatory", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "S-curve", contribution: "Positive", prior: ["0", "80"] },
+  { name: "Total_Youtube_Impressions", group: "Digital", role: "Mandatory", transform: "Adstock", decay: ["0.10", "0.90", "0.10"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "S-curve", contribution: "Positive", prior: ["0", "80"] },
+  { name: "Comp1_TV_Spend", group: "Competition", role: "Optional", transform: "Direct", decay: ["—", "—", "—"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "None", contribution: "Coefficient", prior: ["-80", "80"] },
+  { name: "Online_Coupon", group: "Promotion", role: "Mandatory", transform: "Adstock", decay: ["0.10", "0.90", "0.20"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "S-curve", contribution: "Positive", prior: ["0", "80"] },
+  { name: "Promo_Leaflets", group: "Promotion", role: "Mandatory", transform: "Gamma", decay: ["0.10", "0.70", "0.10"], build: ["0.50", "2.00", "0.25"], period: ["1", "5", "1"], saturation: "Gamma", contribution: "Positive", prior: ["0", "80"] },
+  { name: "Election_Day", group: "Events", role: "Mandatory", transform: "Direct", decay: ["—", "—", "—"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "None", contribution: "Fixed", prior: ["Fixed", "Fixed"] },
+  { name: "Holiday_Event1", group: "Events", role: "Mandatory", transform: "Direct", decay: ["—", "—", "—"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "None", contribution: "Fixed", prior: ["Fixed", "Fixed"] },
+  { name: "Avg_Price_Comp5", group: "Competition", role: "Optional", transform: "Direct", decay: ["—", "—", "—"], build: ["—", "—", "—"], period: ["—", "—", "—"], saturation: "None", contribution: "Coefficient", prior: ["-80", "80"] },
 ];
 
 const availableVariables = [
