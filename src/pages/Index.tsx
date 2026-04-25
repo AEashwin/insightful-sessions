@@ -367,8 +367,11 @@ interface ChatStageProps {
   onPickProject: (id: string, name: string) => void;
   onCreateProject: (p: { name: string; brand: string; market: string; bu: string }) => void;
   onNewProject: () => void;
-  theme: "light" | "dark";
+  theme: ThemeMode;
+  palette: ColorPalette;
   onToggleTheme: () => void;
+  onThemeChange: (theme: ThemeMode) => void;
+  onPaletteChange: (palette: ColorPalette) => void;
   userName: string;
 }
 
@@ -385,7 +388,10 @@ function ChatStage({
   onCreateProject,
   onNewProject,
   theme,
+  palette,
   onToggleTheme,
+  onThemeChange,
+  onPaletteChange,
   userName,
 }: ChatStageProps) {
   const { state } = useSidebar();
@@ -450,6 +456,7 @@ function ChatStage({
           </nav>
         </div>
         <div className="flex items-center gap-1">
+          <PaletteMenu palette={palette} theme={theme} onPaletteChange={onPaletteChange} onThemeChange={onThemeChange} />
           <button
             onClick={onToggleTheme}
             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
