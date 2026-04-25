@@ -58,12 +58,30 @@ interface Message {
 
 type ThemeMode = "light" | "dark";
 type ColorPalette = "purple" | "analyst" | "cockpit";
+type RunMode = "guided" | "autopilot";
+type ChainGate = "mode" | "datacube" | "classification" | "drd" | "modelReady" | "checkpoint" | "complete";
+
+interface SkillChainState {
+  active: boolean;
+  runMode?: RunMode;
+  step: number;
+  currentBatch: number;
+  waitingFor?: ChainGate;
+}
 
 const paletteOptions: Array<{ id: ColorPalette; name: string; note: string }> = [
   { id: "purple", name: "Enterprise Purple Plus", note: "Navy shell, purple core, crisp enterprise accents" },
   { id: "analyst", name: "Colorful Analyst", note: "Teal-led workspace with warmer workflow highlights" },
   { id: "cockpit", name: "Dark Data Cockpit", note: "Charcoal-blue platform with electric data accents" },
 ];
+
+const projectContext = {
+  tenant: "Analytic Edge Demo",
+  project: "Demo_Brand4_2025",
+  brand: "Brand4",
+  subBrand: "Brand4 Core",
+  country: "UK",
+};
 
 const projects: Project[] = [
   { id: "1", name: "Demo_Brand4_2025", brand: "Brand4", market: "UK" },
