@@ -505,6 +505,60 @@ function ChatStage({
   );
 }
 
+function PaletteMenu({
+  palette,
+  theme,
+  onPaletteChange,
+  onThemeChange,
+}: {
+  palette: ColorPalette;
+  theme: ThemeMode;
+  onPaletteChange: (palette: ColorPalette) => void;
+  onThemeChange: (theme: ThemeMode) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          aria-label="Open platform palette settings"
+        >
+          <Palette size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel className="text-xs">Platform palette</DropdownMenuLabel>
+        <div className="grid grid-cols-2 gap-1 px-2 pb-2">
+          {(["light", "dark"] as ThemeMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => onThemeChange(mode)}
+              className={`h-8 rounded-md border text-xs font-medium transition-colors ${
+                theme === mode ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted text-muted-foreground"
+              }`}
+            >
+              {mode === "light" ? "Light" : "Dark"}
+            </button>
+          ))}
+        </div>
+        <DropdownMenuSeparator />
+        {paletteOptions.map((option) => (
+          <DropdownMenuItem key={option.id} onClick={() => onPaletteChange(option.id)} className="items-start gap-3 py-2">
+            <span className={`mt-0.5 flex h-4 w-4 rounded-full border border-border palette-dot-${option.id}`} />
+            <span className="flex-1">
+              <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                {option.name}
+                {palette === option.id && <Check size={13} className="text-primary" />}
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">{option.note}</span>
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function AuthScreen({ onDemoSignIn }: { onDemoSignIn: () => void }) {
   const [mode, setMode] = useState<"signup" | "signin">("signin");
   const [firstName, setFirstName] = useState("John");
