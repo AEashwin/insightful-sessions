@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight, Moon, Sparkles, Sun } from "lucide-react";
+import { Check, ChevronRight, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -124,6 +124,7 @@ const Index = () => {
   const [activeProjectId, setActiveProjectId] = useState("1");
   const [activeThreadId, setActiveThreadId] = useState("t1");
   const [messages, setMessages] = useState<Message[]>(seededMessages);
+  const [threadTitles, setThreadTitles] = useState<Record<string, string>>({});
   const [thinking, setThinking] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,7 @@ const Index = () => {
   }, [messages, thinking]);
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
+  const activeThreadTitle = activeThreadId ? (threadTitles[activeThreadId] ?? activeThread?.title) : "New chat";
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const handleSend = async (text: string) => {
@@ -258,7 +260,8 @@ const Index = () => {
           scrollRef={scrollRef}
           activeToolName={toolNames[activeToolId]}
           activeProjectName={activeProject?.name}
-          activeThreadTitle={activeThread?.title}
+          activeThreadTitle={activeThreadTitle}
+          onRenameThread={(title) => activeThreadId && setThreadTitles((prev) => ({ ...prev, [activeThreadId]: title }))}
           onSend={handleSend}
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
@@ -291,6 +294,7 @@ interface ChatStageProps {
   activeToolName: string;
   activeProjectName?: string;
   activeThreadTitle?: string;
+  onRenameThread: (title: string) => void;
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
   onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
@@ -306,6 +310,7 @@ function ChatStage({
   activeToolName,
   activeProjectName,
   activeThreadTitle,
+  onRenameThread,
   onSend,
   onPickProject,
   onCreateProject,
@@ -316,6 +321,20 @@ function ChatStage({
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const widthClass = collapsed ? "max-w-5xl" : "max-w-3xl";
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(activeThreadTitle || "New chat");
+
+  useEffect(() => {
+    setDraftTitle(activeThreadTitle || "New chat");
+    setEditingTitle(false);
+  }, [activeThreadTitle]);
+
+  const saveTitle = () => {
+    const nextTitle = draftTitle.trim() || "New chat";
+    onRenameThread(nextTitle);
+    setDraftTitle(nextTitle);
+    setEditingTitle(false);
+  };
 
   // Landing mode: no messages yet — show centered greeting + tiles + composer.
   const isLanding = messages.length === 0;
@@ -329,9 +348,35 @@ function ChatStage({
             <ChevronRight size={12} className="text-muted-foreground shrink-0" />
             <span className="text-muted-foreground truncate">{activeProjectName}</span>
             <ChevronRight size={12} className="text-muted-foreground shrink-0" />
-            <span className="font-semibold text-foreground truncate">
-              {activeThreadTitle || "New chat"}
-            </span>
+            {editingTitle ? (
+              <span className="flex items-center gap-1 min-w-0">
+                <input
+                  value={draftTitle}
+                  onChange={(e) => setDraftTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveTitle();
+                    if (e.key === "Escape") setEditingTitle(false);
+                  }}
+                  autoFocus
+                  className="h-7 w-56 max-w-[36vw] rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <button onClick={saveTitle} className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground" aria-label="Save chat name">
+                  <Check size={13} />
+                </button>
+                <button onClick={() => setEditingTitle(false)} className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground" aria-label="Cancel rename">
+                  <X size={13} />
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => setEditingTitle(true)}
+                className="group/title flex items-center gap-1 min-w-0 rounded-md px-1 py-0.5 hover:bg-muted transition-colors"
+                aria-label="Rename chat"
+              >
+                <span className="font-semibold text-foreground truncate">{activeThreadTitle || "New chat"}</span>
+                <Pencil size={11} className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0" />
+              </button>
+            )}
           </nav>
         </div>
         <div className="flex items-center gap-1">
