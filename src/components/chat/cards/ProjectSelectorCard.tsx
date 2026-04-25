@@ -34,9 +34,10 @@ const bus = ["All", "NorthAmerica", "Europe", "Asia-Pac"];
 
 interface Props {
   onPick?: (projectId: string, projectName: string) => void;
+  onNewProject?: () => void;
 }
 
-export function ProjectSelectorCard({ onPick }: Props = {}) {
+export function ProjectSelectorCard({ onPick, onNewProject }: Props = {}) {
   const [query, setQuery] = useState("");
   const [bu, setBu] = useState("All");
   const [country, setCountry] = useState("All");
@@ -173,7 +174,7 @@ export function ProjectSelectorCard({ onPick }: Props = {}) {
         )}
 
         <div className="flex justify-center pt-1">
-          <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 text-muted-foreground">
+          <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1 text-muted-foreground" onClick={onNewProject}>
             <Plus size={11} /> New project
           </Button>
         </div>

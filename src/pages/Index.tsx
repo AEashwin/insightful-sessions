@@ -46,7 +46,7 @@ interface Message {
   role: "user" | "assistant";
   text?: string;
   card?: CardKey;
-  prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
+  prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
 }
 
 const projects: Project[] = [
@@ -94,13 +94,14 @@ const renderCard = (
   key: CardKey,
   ctx: {
     onPickProject?: (id: string, name: string) => void;
-    onCreateProject?: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
-    prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
+    onCreateProject?: (p: { name: string; brand: string; market: string; bu: string }) => void;
+    onNewProject?: () => void;
+    prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
   },
 ) => {
   switch (key) {
     case "project": return <ProjectSummaryCard />;
-    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
+    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <VariableGroupsCard />;
@@ -164,6 +165,24 @@ const Index = () => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
     const history = [...messages, userMsg];
     setMessages(history);
+
+    if (/\b(create|start|set up)\b.*\bnew project\b/i.test(text)) {
+      setActiveThreadId("");
+      setMessages([
+        userMsg,
+        {
+          id: `a${Date.now() + 1}`,
+          role: "assistant",
+          text: activeProjectId
+            ? "I'll create the new project in a new chat window so it stays separate from this project session."
+            : "Let's create the new project in this new chat window.",
+          card: "newProject",
+        },
+      ]);
+      setThinking(false);
+      return;
+    }
+
     setThinking(true);
 
     try {
@@ -223,14 +242,14 @@ const Index = () => {
     ]);
   };
 
-  const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => {
+  const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string }) => {
     setMessages((prev) => [
       ...prev,
       { id: `u${Date.now()}`, role: "user", text: `Create project ${p.name}` },
       {
         id: `a${Date.now() + 1}`,
         role: "assistant",
-        text: `Created **${p.name}** (${p.brand} · ${p.market}, KPI: ${p.kpi}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
+        text: `Created **${p.name}** (${p.bu} · ${p.market} · ${p.brand}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
         card: "upload",
       },
     ]);
@@ -292,6 +311,7 @@ const Index = () => {
           onSend={handleSend}
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
+          onNewProject={handleNewProject}
           theme={theme}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
           userName="John"
@@ -324,7 +344,8 @@ interface ChatStageProps {
   onRenameThread: (title: string) => void;
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
-  onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+  onCreateProject: (p: { name: string; brand: string; market: string; bu: string }) => void;
+  onNewProject: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
   userName: string;
@@ -341,6 +362,7 @@ function ChatStage({
   onSend,
   onPickProject,
   onCreateProject,
+  onNewProject,
   theme,
   onToggleTheme,
   userName,
@@ -431,7 +453,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, prefill: m.prefill })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (
