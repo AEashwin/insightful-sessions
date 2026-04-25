@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent, ChangeEvent } from "react";
+import { useRef, useState, KeyboardEvent, ChangeEvent } from "react";
 import { ArrowUp, Paperclip, Sparkles } from "lucide-react";
 
 interface ChatComposerProps {
@@ -22,11 +22,15 @@ const defaultSuggestions = [
 
 export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidthClass = "max-w-3xl" }: ChatComposerProps) {
   const [value, setValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const submit = () => {
     if (!value.trim()) return;
     onSend(value.trim());
     setValue("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "42px";
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -58,6 +62,7 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidt
             ))}
           </div>
           <textarea
+            ref={textareaRef}
             value={value}
             onChange={onTextareaChange}
             onKeyDown={onKeyDown}
