@@ -65,7 +65,7 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
   const updateRange = (name: string, key: "decay" | "gamma" | "period" | "prior", index: number, value: string) => {
     setVariables((current) => current.map((row) => {
       if (row.name !== name) return row;
-      const next = [...row[key]] as [string, string, string] & [string, string];
+      const next = [...row[key]] as string[];
       next[index] = value;
       return { ...row, [key]: next };
     }));
