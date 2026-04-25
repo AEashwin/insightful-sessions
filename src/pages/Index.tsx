@@ -262,7 +262,7 @@ const Index = () => {
   }
 
   if (!authenticated) {
-    return <AuthScreen />;
+    return <AuthScreen onDemoSignIn={() => setAuthenticated(true)} />;
   }
 
   return (
@@ -455,7 +455,7 @@ function ChatStage({
   );
 }
 
-function AuthScreen() {
+function AuthScreen({ onDemoSignIn }: { onDemoSignIn: () => void }) {
   const [mode, setMode] = useState<"signup" | "signin">("signin");
   const [firstName, setFirstName] = useState("John");
   const [lastName, setLastName] = useState("Davies");
@@ -487,6 +487,14 @@ function AuthScreen() {
     }
 
     setSubmitting(true);
+
+    const isJohnDemo = cleanEmail.toLowerCase() === "john.davies@analyticedge.com" && password === "DemoPassword123!";
+    if (mode === "signin" && isJohnDemo) {
+      setSubmitting(false);
+      onDemoSignIn();
+      return;
+    }
+
     const { error } = mode === "signup"
       ? await supabase.auth.signUp({
           email: cleanEmail,
@@ -520,8 +528,7 @@ function AuthScreen() {
             <img src={brandLogo} alt="Analytic Edge Qube" className="h-10 w-auto" />
           </div>
           <div className="mt-20 max-w-md">
-            <p className="text-sm font-semibold text-navy-foreground/70">Qube 3.0</p>
-            <h1 className="mt-6 text-4xl lg:text-5xl font-semibold leading-tight tracking-normal">
+            <h1 className="text-4xl lg:text-5xl font-semibold leading-tight tracking-normal">
               Analytics that thinks with you
             </h1>
             <p className="mt-5 text-sm leading-6 text-navy-foreground/70">
