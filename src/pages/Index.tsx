@@ -311,6 +311,7 @@ const Index = () => {
           onSend={handleSend}
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
+          onNewProject={handleNewProject}
           theme={theme}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
           userName="John"
