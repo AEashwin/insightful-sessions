@@ -130,6 +130,7 @@ const renderCard = (
     onPickProject?: (id: string, name: string) => void;
     onCreateProject?: (p: { name: string; brand: string; market: string; bu: string }) => void;
     onNewProject?: () => void;
+    onClassificationConfirm?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
   },
 ) => {
@@ -138,7 +139,7 @@ const renderCard = (
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
-    case "groups": return <ClassificationCard />;
+    case "groups": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
     case "properties": return <VariablePropertiesCard />;
     case "mapping": return <SpendMappingCard />;
     case "transformations": return <ModelTransformationsCard />;
@@ -147,7 +148,7 @@ const renderCard = (
     case "optimisation": return <OptimisationCard />;
     case "flighting": return <FlightingCard />;
     case "workflow": return <WorkflowCard />;
-    case "classification": return <ClassificationCard />;
+    case "classification": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
   }
 };
 
@@ -321,6 +322,19 @@ const Index = () => {
     ]);
   };
 
+  const handleClassificationConfirm = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `a${Date.now()}`,
+        role: "assistant",
+        text: "Classification is locked. Next logical step is **Spend Mapping** — review mapped, missing, and spend-only variables in one view before moving into variable properties.",
+        card: "mapping",
+      },
+    ]);
+    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -357,6 +371,7 @@ const Index = () => {
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
           onNewProject={handleNewProject}
+          onClassificationConfirm={handleClassificationConfirm}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -440,6 +455,7 @@ interface ChatStageProps {
   onPickProject: (id: string, name: string) => void;
   onCreateProject: (p: { name: string; brand: string; market: string; bu: string }) => void;
   onNewProject: () => void;
+  onClassificationConfirm: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -460,6 +476,7 @@ function ChatStage({
   onPickProject,
   onCreateProject,
   onNewProject,
+  onClassificationConfirm,
   theme,
   palette,
   onToggleTheme,
@@ -554,7 +571,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, prefill: m.prefill })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (
