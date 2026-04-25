@@ -204,6 +204,23 @@ const Index = () => {
     const history = [...messages, userMsg];
     setMessages(history);
 
+    const isSpendConfirmation = /\b(confirm|confirmed|approve|approved|done|proceed)\b/i.test(text)
+      && messages.slice().reverse().some((message) => message.role === "assistant" && message.card === "mapping");
+    if (isSpendConfirmation) {
+      setMessages([
+        ...history,
+        {
+          id: `a${Date.now() + 1}`,
+          role: "assistant",
+          text: "Spend mapping confirmed. After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
+          card: "properties",
+        },
+      ]);
+      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 3), waitingFor: "drd" } : current);
+      setThinking(false);
+      return;
+    }
+
     const chainReply = getSkillChainReply(text, chain);
     if (chainReply) {
       setChain(chainReply.nextState);
@@ -328,7 +345,7 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Classification is locked. Next logical step is **Spend Mapping** — review mapped, missing, and spend-only variables in one view before moving into variable properties.",
+        text: "Classification is locked. Next is **Spend Mapping**. Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
         card: "mapping",
       },
     ]);
