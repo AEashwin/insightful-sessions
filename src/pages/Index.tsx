@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, ChevronRight, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
+import { BarChart3, Check, ChevronRight, LineChart, Lock, Mail, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -20,7 +20,9 @@ import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "@/hooks/use-toast";
+import brandLogo from "@/assets/analytic-edge-qube-logo.png";
 
 type CardKey =
   | "project"
@@ -120,6 +122,8 @@ const toolNames: Record<string, string> = {
 };
 
 const Index = () => {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeToolId, setActiveToolId] = useState("dd");
   const [activeProjectId, setActiveProjectId] = useState("1");
   const [activeThreadId, setActiveThreadId] = useState("t1");
@@ -128,6 +132,20 @@ const Index = () => {
   const [thinking, setThinking] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthenticated(Boolean(session));
+      setAuthLoading(false);
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthenticated(Boolean(data.session));
+      setAuthLoading(false);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -237,6 +255,14 @@ const Index = () => {
       },
     ]);
   };
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  if (!authenticated) {
+    return <AuthScreen />;
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>
