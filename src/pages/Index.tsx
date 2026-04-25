@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { BarChart3, Check, ChevronRight, LineChart, Lock, Mail, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
+import { BarChart3, Check, ChevronRight, LineChart, Lock, Mail, Moon, Palette, Pencil, Sparkles, Sun, X } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -18,6 +18,14 @@ import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -47,6 +55,15 @@ interface Message {
   card?: CardKey;
   prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
 }
+
+type ThemeMode = "light" | "dark";
+type ColorPalette = "purple" | "analyst" | "cockpit";
+
+const paletteOptions: Array<{ id: ColorPalette; name: string; note: string }> = [
+  { id: "purple", name: "Enterprise Purple Plus", note: "Navy shell, purple core, crisp enterprise accents" },
+  { id: "analyst", name: "Colorful Analyst", note: "Teal-led workspace with warmer workflow highlights" },
+  { id: "cockpit", name: "Dark Data Cockpit", note: "Charcoal-blue platform with electric data accents" },
+];
 
 const projects: Project[] = [
   { id: "1", name: "Demo_Brand4_2025", brand: "Brand4", market: "UK" },
