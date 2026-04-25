@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, CheckCircle2, GripVertical, MousePointer2, Plus, Search, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check, ChevronDown, Download, GripVertical, Plus, Search, Upload, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-interface Group {
+interface GroupNode {
+  id: string;
   name: string;
   variables: string[];
 }
@@ -12,209 +13,270 @@ interface Group {
 interface Bucket {
   id: string;
   title: string;
-  role: string;
-  groups: Group[];
+  icon: string;
+  groups: GroupNode[];
 }
 
-const buckets: Bucket[] = [
+const initialBuckets: Bucket[] = [
+  { id: "time", title: "Time", icon: "◷", groups: [{ id: "time-week", name: "", variables: ["monthEnding", "weekEnding"] }] },
+  { id: "dependent", title: "Dependent variable", icon: "🎯", groups: [{ id: "dep-sales", name: "", variables: ["Sales_Volume", "Revenue"] }] },
+  { id: "dimension", title: "Dimension", icon: "◩", groups: [{ id: "dim-core", name: "", variables: ["Region", "Brand"] }] },
   {
-    id: "time",
-    title: "Time",
-    role: "Date columns",
-    groups: [{ name: "Week / Month", variables: ["weekEnding", "monthEnding"] }],
-  },
-  {
-    id: "dependent",
-    title: "Dependent",
-    role: "Outcome to model",
-    groups: [{ name: "Sales", variables: ["Sales_Volume", "Revenue"] }],
-  },
-  {
-    id: "dimension",
-    title: "Dimension",
-    role: "Cuts, not drivers",
-    groups: [{ name: "Market structure", variables: ["Region", "Brand", "SKU"] }],
+    id: "incremental",
+    title: "Incremental",
+    icon: "↗",
+    groups: [
+      { id: "inc-tv", name: "Media > TV", variables: ["TV_SB1_GRPs", "TV_SB1_Imps", "TV_SB1_Spnd", "Halo_TV_GRPs", "Halo_TV_Spnd"] },
+      { id: "inc-meta", name: "Media > Meta", variables: ["Meta_SB1_Imps", "Meta_SB1_Clicks", "Meta_SB1_Spnd", "Meta_SB2_Imps", "Meta_SB2_Spnd"] },
+      { id: "inc-dv360", name: "Media > DV360", variables: ["DV360_SB1_YTProg_Imps", "DV360_SB1_YTProg_Spnd", "DV360_SB1_Display_Imps"] },
+      { id: "inc-youtube", name: "Media > YouTube", variables: ["YouTube_Views", "YouTube_Spnd"] },
+      { id: "inc-trade", name: "Non_Media > Trade", variables: ["TradeScheme_Nts_Amt", "TradeScheme_Nts_Vol"] },
+      { id: "inc-promo", name: "Non_Media > Promo", variables: ["Promo_Flag", "Leaflet_Drops"] },
+    ],
   },
   {
     id: "base",
-    title: "Base drivers",
-    role: "Price, distribution, events, trend",
+    title: "Base",
+    icon: "▣",
     groups: [
-      { name: "Price", variables: ["Nielsen_Price_SB1", "Nielsen_Price_SB2", "Promo_Depth"] },
-      { name: "Distribution", variables: ["Nielsen_WD_SB1", "Nielsen_WD_SB2"] },
-      { name: "Events / Trend", variables: ["Holiday_Flag", "Category_Trend", "Base_Trend"] },
-      { name: "Competition", variables: ["Comp_TV_GRPs", "Comp_TV_Spnd", "Competitor_Price"] },
+      { id: "base-price", name: "Price", variables: ["Nielsen_Price_SB1", "Nielsen_Price_SB2"] },
+      { id: "base-dist", name: "Distribution", variables: ["Nielsen_WD_SB1", "Nielsen_WD_SB2"] },
+      { id: "base-events", name: "Baseline > Events", variables: ["Holiday_Flag", "Election_Flag"] },
+      { id: "base-trend", name: "Baseline > Trend", variables: ["Category_Trend"] },
+      { id: "base-comp", name: "Baseline > Comp", variables: ["Comp_TV_GRPs", "Comp_TV_Spnd"] },
     ],
   },
   {
-    id: "incremental",
-    title: "Incremental drivers",
-    role: "Media and activation variables",
-    groups: [
-      { name: "TV", variables: ["TV_SB1_GRPs", "TV_SB1_Imps", "TV_SB1_Spnd", "Halo_TV_GRPs"] },
-      { name: "Meta", variables: ["Meta_SB1_Imps", "Meta_SB1_Clicks", "Meta_SB1_Spnd", "Meta_SB2_Spnd"] },
-      { name: "DV360", variables: ["DV360_YTProg_Imps", "DV360_Display_Imps", "DV360_YTProg_Spnd"] },
-      { name: "YouTube", variables: ["YouTube_Views", "YouTube_Spend"] },
-    ],
+    id: "unclassified",
+    title: "Unclassified",
+    icon: "⚠",
+    groups: [{ id: "unclassified-core", name: "", variables: ["Unknown_Var_1", "New_Campaign_X", "Test_Metric_A", "Regional_04", "OOS_Flag"] }],
   },
 ];
 
-const unclassified = ["Unknown_Var_1", "New_Campaign_X", "Regional_OOH_04", "OOS_Flag"];
-const moveTargets = ["Time", "Dependent", "Dimension", "Base drivers", "Incremental drivers"];
+const parentOptions = ["Incremental", "Incremental > Media", "Incremental > Non_Media", "Incremental > Media > Traditional", "Incremental > Media > Digital", "Base", "Base > Baseline"];
 
 export function ClassificationCard() {
-  const [selected, setSelected] = useState("Meta_SB1_Spnd");
-  const total = useMemo(
-    () => buckets.reduce((sum, bucket) => sum + bucket.groups.reduce((inner, group) => inner + group.variables.length, 0), 0) + unclassified.length,
-    [],
-  );
+  const [buckets, setBuckets] = useState(initialBuckets);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [newGroupFor, setNewGroupFor] = useState<string | null>(null);
+  const [newGroupParent, setNewGroupParent] = useState(parentOptions[0]);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [changeLog, setChangeLog] = useState<string[]>([]);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const counts = useMemo(() => {
+    const bucketCount = (bucket: Bucket) => bucket.groups.reduce((sum, group) => sum + group.variables.length, 0);
+    const total = buckets.reduce((sum, bucket) => sum + bucketCount(bucket), 0);
+    const unresolved = bucketCount(buckets.find((bucket) => bucket.id === "unclassified")!);
+    return { total, classified: total - unresolved, unresolved, bucketCount };
+  }, [buckets]);
+
+  const toggleVariable = (name: string) => {
+    setSelected((current) => (current.includes(name) ? current.filter((item) => item !== name) : [...current, name]));
+  };
+
+  const moveVariables = (targetBucketId: string, targetGroupId: string, incoming?: string[]) => {
+    const variables = incoming?.length ? incoming : selected;
+    if (!variables.length) return;
+
+    setBuckets((current) =>
+      current.map((bucket) => ({
+        ...bucket,
+        groups: bucket.groups.map((group) => ({
+          ...group,
+          variables:
+            group.id === targetGroupId && bucket.id === targetBucketId
+              ? Array.from(new Set([...group.variables, ...variables]))
+              : group.variables.filter((variable) => !variables.includes(variable)),
+        })),
+      })),
+    );
+    setChangeLog((current) => [...current, `Moved ${variables.length} column${variables.length > 1 ? "s" : ""} to ${targetGroupId.replace(/^(inc|base|time|dep|dim|unclassified)-/, "")}`]);
+    setSelected([]);
+    setConfirmed(false);
+  };
+
+  const createGroup = () => {
+    const name = newGroupName.trim();
+    if (!newGroupFor || !name) return;
+
+    setBuckets((current) =>
+      current.map((bucket) =>
+        bucket.id === newGroupFor
+          ? {
+              ...bucket,
+              groups: [
+                ...bucket.groups,
+                {
+                  id: `${bucket.id}-${Date.now()}`,
+                  name: newGroupParent.includes(bucket.title) ? name : `${newGroupParent.split(" > ").slice(1).join(" > ")} > ${name}`.replace(/^ > /, ""),
+                  variables: [],
+                },
+              ],
+            }
+          : bucket,
+      ),
+    );
+    setChangeLog((current) => [...current, `Created group ${name} under ${newGroupParent}`]);
+    setNewGroupFor(null);
+    setNewGroupName("");
+    setConfirmed(false);
+  };
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-muted/40 px-4 py-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="border-b border-border bg-background px-3 py-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Variable Classification</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">{total} datacube columns · {unclassified.length} unresolved</h3>
-              <Badge variant="outline" className="h-5 border-warning/30 bg-warning/10 text-[10px] text-warning">
-                <AlertTriangle size={10} className="mr-1" /> Needs review
-              </Badge>
-            </div>
+            <h3 className="text-sm font-semibold text-foreground">Variable Classification</h3>
+            <p className="text-[11px] text-muted-foreground">
+              {counts.classified} classified · {counts.unresolved} unclassified · {counts.total} total
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative w-full sm:w-56">
+          <div className="flex items-center gap-1.5">
+            <div className="relative w-48">
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Search datacube columns" className="h-8 pl-7 text-xs" />
+              <Input placeholder="Search variables..." className="h-8 rounded-md pl-7 text-xs" />
             </div>
-            <Button size="sm" variant="outline" className="h-8 gap-1 text-[11px]"><MousePointer2 size={12} /> Select</Button>
-            <Button size="sm" className="h-8 gap-1 text-[11px]"><Sparkles size={12} /> Accept AI suggestions</Button>
+            <IconButton label="Import"><Upload size={13} /></IconButton>
+            <IconButton label="Export"><Download size={13} /></IconButton>
+            <Button size="sm" className="h-8 gap-1 text-[11px]" onClick={() => setConfirmed(true)}>
+              Confirm <Check size={12} />
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-px bg-border xl:grid-cols-12">
-        <section className="bg-card p-3 xl:col-span-8">
-          <div className="grid gap-2 lg:grid-cols-3">
-            {buckets.slice(0, 3).map((bucket) => (
-              <SimpleBucket key={bucket.id} bucket={bucket} selected={selected} onSelect={setSelected} compact />
-            ))}
-          </div>
-
-          <div className="mt-2 grid gap-2 lg:grid-cols-2">
-            {buckets.slice(3).map((bucket) => (
-              <SimpleBucket key={bucket.id} bucket={bucket} selected={selected} onSelect={setSelected} />
-            ))}
-          </div>
-        </section>
-
-        <aside className="bg-card p-3 xl:col-span-4">
-          <div className="rounded-lg border border-border bg-muted/20 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Selected column</p>
-            <p className="mt-1 font-mono text-xs font-semibold text-foreground">{selected}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Metric label="Current bucket" value="Incremental" />
-              <Metric label="Group" value="Meta" />
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-lg border border-border">
-            <div className="border-b border-border bg-muted/30 px-3 py-2">
-              <p className="text-[11px] font-semibold text-foreground">Move selected column</p>
-            </div>
-            <div className="space-y-2 p-3">
-              {moveTargets.map((target) => (
-                <button
-                  key={target}
-                  type="button"
-                  className="flex w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-muted/50"
-                >
-                  <span>{target}</span>
-                  <ArrowRight size={12} className="text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-lg border border-dashed border-warning/40 bg-warning/5 p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-warning">Unclassified columns</p>
-              <Badge variant="outline" className="h-5 border-warning/30 bg-card text-[10px] text-warning">{unclassified.length}</Badge>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {unclassified.map((variable) => (
-                <VariableChip key={variable} name={variable} selected={selected === variable} onClick={() => setSelected(variable)} />
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-center gap-2 rounded-lg border border-success/25 bg-success/5 px-3 py-2 text-[11px] text-success">
-            <CheckCircle2 size={13} />
-            Drag a chip into a bucket, or select it and use the move panel.
-          </div>
-        </aside>
+      <div className="grid gap-2 bg-muted/30 p-3 lg:grid-cols-3">
+        {buckets.slice(0, 3).map((bucket) => (
+          <BucketPanel key={bucket.id} bucket={bucket} count={counts.bucketCount(bucket)} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
+        ))}
       </div>
+
+      <div className="grid gap-2 bg-muted/30 px-3 pb-2 lg:grid-cols-2">
+        {buckets.slice(3, 5).map((bucket) => (
+          <BucketPanel
+            key={bucket.id}
+            bucket={bucket}
+            count={counts.bucketCount(bucket)}
+            selected={selected}
+            onToggle={toggleVariable}
+            onMove={moveVariables}
+            onNewGroup={() => {
+              setNewGroupFor(bucket.id);
+              setNewGroupParent(bucket.title === "Incremental" ? parentOptions[1] : parentOptions[5]);
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="bg-muted/30 px-3 pb-3">
+        <BucketPanel bucket={buckets[5]} count={counts.unresolved} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
+      </div>
+
+      {newGroupFor && (
+        <div className="border-t border-border bg-card px-3 py-3">
+          <div className="grid gap-2 rounded-lg border border-border bg-background p-3 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end">
+            <label className="text-[11px] font-medium text-foreground">
+              Within which group?
+              <select value={newGroupParent} onChange={(event) => setNewGroupParent(event.target.value)} className="mt-1 h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground">
+                {parentOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+            <label className="text-[11px] font-medium text-foreground">
+              New group name
+              <Input value={newGroupName} onChange={(event) => setNewGroupName(event.target.value)} placeholder="e.g. Retail media" className="mt-1 h-8 text-xs" />
+            </label>
+            <Button size="sm" className="h-8 text-[11px]" onClick={createGroup}>Create</Button>
+            <Button size="sm" variant="outline" className="h-8 text-[11px]" onClick={() => setNewGroupFor(null)}><X size={12} /></Button>
+          </div>
+        </div>
+      )}
+
+      {(selected.length > 0 || confirmed) && (
+        <div className="border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
+          {selected.length > 0 && <span>{selected.length} selected. Click any group title, or drag the selected chips into a group.</span>}
+          {confirmed && (
+            <div className="space-y-1">
+              <p className="font-semibold text-foreground">DD assistant: Confirmed. Changes made:</p>
+              {(changeLog.length ? changeLog : ["No manual classification changes were made."]).map((item, index) => <p key={`${item}-${index}`}>• {item}</p>)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function SimpleBucket({ bucket, selected, onSelect, compact = false }: { bucket: Bucket; selected: string; onSelect: (v: string) => void; compact?: boolean }) {
-  const count = bucket.groups.reduce((sum, group) => sum + group.variables.length, 0);
-
+function BucketPanel({ bucket, count, selected, onToggle, onMove, onNewGroup, compact = false }: { bucket: Bucket; count: number; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; onNewGroup?: () => void; compact?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
-        <div>
+    <section className="overflow-hidden rounded-lg border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs" aria-hidden>{bucket.icon}</span>
           <p className="text-[11px] font-semibold text-foreground">{bucket.title}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">{bucket.role}</p>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className="h-5 bg-card text-[10px]">{count}</Badge>
-          {!compact && <Button variant="ghost" size="sm" className="h-5 w-5 p-0"><Plus size={11} /></Button>}
+        <div className="flex items-center gap-2">
+          {onNewGroup && <button type="button" onClick={onNewGroup} className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-background px-2 text-[10px] font-medium text-foreground hover:bg-muted"><Plus size={10} /> New group</button>}
+          <Badge variant="outline" className="h-5 bg-muted/40 text-[10px]">{count}</Badge>
         </div>
       </div>
-      <div className={`space-y-2 p-3 ${compact ? "min-h-[94px]" : "min-h-[265px]"}`}>
+      <div className={`space-y-2 p-2 ${compact ? "min-h-[70px]" : "min-h-[324px]"}`}>
         {bucket.groups.map((group) => (
-          <div key={group.name} className="rounded-md border border-border bg-card p-2">
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-foreground">{group.name}</p>
-              {!compact && <button type="button" className="text-[10px] font-medium text-primary hover:underline">Rename</button>}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {group.variables.map((variable) => (
-                <VariableChip key={variable} name={variable} selected={selected === variable} onClick={() => onSelect(variable)} />
-              ))}
-            </div>
-          </div>
+          <GroupBlock key={group.id} bucketId={bucket.id} group={group} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact }: { bucketId: string; group: GroupNode; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; compact: boolean }) {
+  return (
+    <div
+      className="rounded-md border border-transparent p-1 transition-colors hover:border-primary/30 hover:bg-muted/30"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        const payload = event.dataTransfer.getData("text/plain");
+        onMove(bucketId, group.id, payload ? payload.split("||") : selected);
+      }}
+    >
+      {group.name && (
+        <button type="button" onClick={() => onMove(bucketId, group.id)} className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-foreground hover:text-primary">
+          <ChevronDown size={10} /> {group.name} <span className="text-muted-foreground">{group.variables.length}</span>
+        </button>
+      )}
+      <div className="flex flex-wrap gap-1.5">
+        {group.variables.map((variable) => (
+          <VariableChip key={variable} name={variable} selected={selected.includes(variable)} onToggle={onToggle} compact={compact} selectedSet={selected} />
         ))}
       </div>
     </div>
   );
 }
 
-function VariableChip({ name, selected, onClick }: { name: string; selected: boolean; onClick: () => void }) {
+function VariableChip({ name, selected, onToggle, compact, selectedSet }: { name: string; selected: boolean; onToggle: (name: string) => void; compact: boolean; selectedSet: string[] }) {
   return (
     <button
       type="button"
       draggable
-      onClick={onClick}
-      className={`group inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 font-mono text-[10px] transition-colors ${
-        selected
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted/50"
-      }`}
+      onClick={() => onToggle(name)}
+      onDragStart={(event) => event.dataTransfer.setData("text/plain", (selectedSet.length && selected ? selectedSet : [name]).join("||"))}
+      className={`inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 font-mono text-[9px] transition-colors ${
+        selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-muted"
+      } ${compact ? "max-w-[132px]" : "max-w-[150px]"}`}
     >
-      <GripVertical size={9} className={selected ? "text-primary-foreground/70" : "text-muted-foreground"} />
+      <GripVertical size={8} className={selected ? "text-primary-foreground/70" : "text-muted-foreground"} />
       <span className="truncate">{name}</span>
     </button>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function IconButton({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-card px-2 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xs font-semibold text-foreground">{value}</p>
-    </div>
+    <button type="button" aria-label={label} title={label} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+      {children}
+    </button>
   );
 }
