@@ -454,5 +454,157 @@ function ChatStage({
   );
 }
 
+function AuthScreen() {
+  const [mode, setMode] = useState<"signup" | "signin">("signup");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [organization, setOrganization] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [license, setLicense] = useState<"modeler" | "viewer">("modeler");
+  const [selectedTools, setSelectedTools] = useState(["demand-drivers"]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const tools = [
+    { id: "demand-drivers", name: "Demand Drivers", subtitle: "Marketing Mix Modelling", price: "$499/mo", tone: "bg-primary/10 text-primary", icon: BarChart3 },
+    { id: "pricesense", name: "PriceSense", subtitle: "Price elasticity modelling", price: "$299/mo", tone: "bg-warning/15 text-warning", icon: LineChart },
+    { id: "portfolio", name: "Portfolio Optimisation", subtitle: "Cross-brand budget allocation", price: "$399/mo", tone: "bg-success/15 text-success", icon: Sparkles },
+  ];
+
+  const total = selectedTools.reduce((sum, id) => sum + (id === "demand-drivers" ? 499 : id === "pricesense" ? 299 : 399), 0) + (license === "modeler" ? 150 : 0);
+
+  const toggleTool = (id: string) => {
+    setSelectedTools((current) => current.includes(id) ? current.filter((tool) => tool !== id) : [...current, id]);
+  };
+
+  const handleAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password || (mode === "signup" && selectedTools.length === 0)) {
+      toast({ title: "Complete the form", description: "Add your email, password, and at least one selected tool." });
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = mode === "signup"
+      ? await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        })
+      : await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+
+    setSubmitting(false);
+    if (error) {
+      toast({ title: mode === "signup" ? "Account creation failed" : "Sign in failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    if (mode === "signup") {
+      toast({ title: "Check your email", description: "Confirm your account, then sign in to continue." });
+      setMode("signin");
+    }
+  };
+
+  const handleGoogle = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) toast({ title: "Google sign-in failed", description: String(result.error.message ?? result.error), variant: "destructive" });
+  };
+
+  return (
+    <main className="min-h-screen bg-background text-foreground grid lg:grid-cols-[0.95fr_1.05fr]">
+      <section className="bg-navy text-navy-foreground px-8 py-10 lg:px-14 flex flex-col justify-between min-h-[42vh] lg:min-h-screen">
+        <div>
+          <div className="inline-flex items-center rounded-md bg-background px-4 py-2 shadow-sm">
+            <img src={brandLogo} alt="Analytic Edge Qube" className="h-10 w-auto" />
+          </div>
+          <div className="mt-20 max-w-md">
+            <p className="text-sm font-semibold text-navy-foreground/70">Qube 3.0</p>
+            <h1 className="mt-6 text-4xl lg:text-5xl font-semibold leading-tight tracking-normal">
+              Analytics that thinks with you
+            </h1>
+            <p className="mt-5 text-sm leading-6 text-navy-foreground/70">
+              A SaaS workspace for MMM, pricing, and portfolio optimisation with guided multi-agent analysis.
+            </p>
+          </div>
+        </div>
+        <div className="grid gap-3 max-w-lg text-xs text-navy-foreground/75">
+          {tools.map((tool) => (
+            <div key={tool.id} className="flex items-center gap-3">
+              <span className="h-7 w-7 rounded-md bg-background/10 flex items-center justify-center"><tool.icon size={14} /></span>
+              <span><strong className="text-navy-foreground">{tool.name}</strong> · {tool.subtitle}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-6 py-8 lg:px-16 flex items-center justify-center">
+        <form onSubmit={handleAuth} className="w-full max-w-xl space-y-5">
+          <div className="grid grid-cols-2 rounded-lg border border-border bg-muted p-1">
+            <button type="button" onClick={() => setMode("signin")} className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "signin" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Sign in</button>
+            <button type="button" onClick={() => setMode("signup")} className={`h-9 rounded-md text-sm font-medium transition-colors ${mode === "signup" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Create account</button>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your account</p>
+            {mode === "signup" && (
+              <div className="mt-3 grid sm:grid-cols-2 gap-3">
+                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" maxLength={80} />
+                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" maxLength={80} />
+              </div>
+            )}
+            <div className="mt-3 space-y-3">
+              <div className="relative"><Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email" type="email" className="pl-9" maxLength={255} /></div>
+              {mode === "signup" && <Input value={organization} onChange={(e) => setOrganization(e.target.value)} placeholder="Organization" maxLength={120} />}
+              <div className="relative"><Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" /><Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" className="pl-9" minLength={8} maxLength={128} /></div>
+            </div>
+          </div>
+
+          {mode === "signup" && (
+            <>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">License type</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setLicense("modeler")} className={`rounded-lg border p-3 text-left transition-colors ${license === "modeler" ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}><span className="text-sm font-semibold">Modeler</span><span className="block text-xs text-muted-foreground mt-1">Build, run, and interpret models</span></button>
+                  <button type="button" onClick={() => setLicense("viewer")} className={`rounded-lg border p-3 text-left transition-colors ${license === "viewer" ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}><span className="text-sm font-semibold">Viewer</span><span className="block text-xs text-muted-foreground mt-1">Read-only results access</span></button>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Select your tools</p>
+                <div className="space-y-2">
+                  {tools.map((tool) => {
+                    const Icon = tool.icon;
+                    const checked = selectedTools.includes(tool.id);
+                    return (
+                      <button type="button" key={tool.id} onClick={() => toggleTool(tool.id)} className={`w-full rounded-lg border p-3 flex items-center gap-3 text-left transition-colors ${checked ? "border-primary bg-primary/10" : "border-border hover:bg-muted"}`}>
+                        <span className={`h-5 w-5 rounded border flex items-center justify-center ${checked ? "bg-primary border-primary text-primary-foreground" : "border-border"}`}>{checked && <Check size={12} />}</span>
+                        <span className={`h-8 w-8 rounded-md flex items-center justify-center ${tool.tone}`}><Icon size={15} /></span>
+                        <span className="flex-1 min-w-0"><span className="block text-sm font-semibold">{tool.name}</span><span className="block text-xs text-muted-foreground">{tool.subtitle}</span></span>
+                        <span className="text-xs font-semibold text-primary">{tool.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3 rounded-lg border border-border bg-muted/60 p-3 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Monthly total</span>
+                  <span className="font-semibold">${total}/mo</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          <button type="submit" disabled={submitting} className="w-full h-10 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity">
+            {submitting ? "Please wait..." : mode === "signup" ? "Create account" : "Sign in"}
+          </button>
+          <button type="button" onClick={handleGoogle} className="w-full h-10 rounded-md border border-border bg-background text-sm font-semibold hover:bg-muted transition-colors">
+            Continue with Google
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+}
+
 export default Index;
 
