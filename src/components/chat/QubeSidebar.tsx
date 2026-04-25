@@ -175,7 +175,7 @@ export function QubeSidebar({
 
           {/* Project switcher */}
           <div className={cn("px-2 pb-2", collapsed && "px-1.5")}>
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={(open) => open && setProjectSearch("")}>
               <DropdownMenuTrigger asChild>
                 <Tooltip delayDuration={200}>
                   <TooltipTrigger asChild>
@@ -208,7 +208,7 @@ export function QubeSidebar({
                   )}
                 </Tooltip>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-60" align="start">
+              <DropdownMenuContent className="w-72" align="start">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5">
                   Projects in {activeTool.name}
                 </p>
@@ -223,21 +223,25 @@ export function QubeSidebar({
                     />
                   </div>
                 </div>
-                {filteredProjects.map((p) => (
-                  <DropdownMenuItem
-                    key={p.id}
-                    onClick={() => onSelectProject(p.id)}
-                    className="flex flex-col items-start gap-0.5"
-                  >
-                    <span className="text-sm font-medium">{p.name}</span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {p.brand} · {p.market}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-                {filteredProjects.length === 0 && (
-                  <p className="px-2 py-2 text-xs text-muted-foreground">No matching projects</p>
-                )}
+                <div className="max-h-64 overflow-y-auto pr-1">
+                  {filteredProjects.map((p) => (
+                    <DropdownMenuItem
+                      key={p.id}
+                      onClick={() => onSelectProject(p.id)}
+                      className="flex flex-col items-start gap-0.5 py-2"
+                    >
+                      <span className="text-sm font-medium text-popover-foreground">{p.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {p.brand} · {p.market}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                  {filteredProjects.length === 0 && (
+                    <p className="px-2 py-2 text-xs text-muted-foreground">
+                      {projects.length === 0 ? "No projects available" : "No matching projects"}
+                    </p>
+                  )}
+                </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onNewProject}>
                   <Plus size={12} className="mr-2" />
