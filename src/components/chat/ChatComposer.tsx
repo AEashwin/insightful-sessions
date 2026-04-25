@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, ChangeEvent } from "react";
 import { ArrowUp, Paperclip, Sparkles } from "lucide-react";
 
 interface ChatComposerProps {
@@ -36,6 +36,12 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidt
     }
   };
 
+  const onTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setValue(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+  };
+
   return (
     <div className="px-6 pb-3 pt-1 bg-gradient-to-t from-background via-background to-transparent">
       <div className={`${maxWidthClass} mx-auto transition-[max-width] duration-200 ease-linear`}>
@@ -53,11 +59,11 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidt
           </div>
           <textarea
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={onTextareaChange}
             onKeyDown={onKeyDown}
             placeholder="Ask anything about your MMM workflow..."
             rows={1}
-            className="w-full resize-none bg-transparent px-4 pt-3 pb-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none max-h-32"
+            className="w-full min-h-[42px] resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
           <div className="flex items-center justify-between px-2 pb-1.5">
             <div className="flex items-center gap-1">
