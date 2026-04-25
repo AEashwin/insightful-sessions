@@ -343,7 +343,8 @@ interface ChatStageProps {
   onRenameThread: (title: string) => void;
   onSend: (text: string) => void;
   onPickProject: (id: string, name: string) => void;
-  onCreateProject: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
+  onCreateProject: (p: { name: string; brand: string; market: string; bu: string }) => void;
+  onNewProject: () => void;
   theme: "light" | "dark";
   onToggleTheme: () => void;
   userName: string;
@@ -360,6 +361,7 @@ function ChatStage({
   onSend,
   onPickProject,
   onCreateProject,
+  onNewProject,
   theme,
   onToggleTheme,
   userName,
@@ -450,7 +452,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p>{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, prefill: m.prefill })}</div>}
+                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, prefill: m.prefill })}</div>}
                 </ChatMessage>
               ))}
               {thinking && (
