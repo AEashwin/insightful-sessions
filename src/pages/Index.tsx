@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight, Moon, Sparkles, Sun } from "lucide-react";
+import { Check, ChevronRight, Moon, Pencil, Sparkles, Sun, X } from "lucide-react";
 import { QubeSidebar, ToolRail, type ChatThread, type Project } from "@/components/chat/QubeSidebar";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatComposer } from "@/components/chat/ChatComposer";
@@ -124,6 +124,7 @@ const Index = () => {
   const [activeProjectId, setActiveProjectId] = useState("1");
   const [activeThreadId, setActiveThreadId] = useState("t1");
   const [messages, setMessages] = useState<Message[]>(seededMessages);
+  const [threadTitles, setThreadTitles] = useState<Record<string, string>>({});
   const [thinking, setThinking] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,7 @@ const Index = () => {
   }, [messages, thinking]);
 
   const activeThread = threads.find((t) => t.id === activeThreadId);
+  const activeThreadTitle = activeThreadId ? (threadTitles[activeThreadId] ?? activeThread?.title) : "New chat";
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const handleSend = async (text: string) => {
@@ -258,7 +260,8 @@ const Index = () => {
           scrollRef={scrollRef}
           activeToolName={toolNames[activeToolId]}
           activeProjectName={activeProject?.name}
-          activeThreadTitle={activeThread?.title}
+          activeThreadTitle={activeThreadTitle}
+          onRenameThread={(title) => activeThreadId && setThreadTitles((prev) => ({ ...prev, [activeThreadId]: title }))}
           onSend={handleSend}
           onPickProject={handlePickProject}
           onCreateProject={handleCreateProject}
