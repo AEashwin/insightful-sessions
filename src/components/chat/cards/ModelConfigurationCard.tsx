@@ -74,6 +74,17 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
     }));
   };
 
+  const handleTransformChange = (name: string, value: string) => {
+    const transform = value === "adstock" ? "Adstock" : value === "gamma" ? "Gamma" : "Direct";
+    updateVariable(name, {
+      transform,
+      decay: transform === "Direct" ? ["—", "—", "—"] : ["0.10", "0.90", "0.10"],
+      build: transform === "Gamma" ? ["0.50", "2.50", "0.25"] : ["—", "—", "—"],
+      period: transform === "Gamma" ? ["1", "6", "1"] : ["—", "—", "—"],
+      saturation: transform === "Gamma" ? "Gamma" : transform === "Adstock" ? "S-curve" : "None",
+    });
+  };
+
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-2 border-b border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
@@ -84,7 +95,7 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
       </div>
 
       <div className="space-y-3 bg-muted/20 p-3">
-        <section className="grid gap-2 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="grid gap-2 xl:grid-cols-[1fr_1.15fr]">
           <div className="rounded-lg border border-border bg-card p-3">
             <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-foreground"><SlidersHorizontal size={13} className="text-primary" /> Model parameters</div>
             <div className="grid gap-2 sm:grid-cols-3">
@@ -96,8 +107,8 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
           <div className="rounded-lg border border-border bg-card p-3">
             <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold text-foreground"><span className="inline-flex items-center gap-2"><CalendarDays size={13} className="text-primary" /> Duration & holdout</span><label className="flex items-center gap-2 text-[10px] text-muted-foreground"><Switch checked={holdoutEnabled} onCheckedChange={setHoldoutEnabled} /> Holdout on</label></div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Model duration</p><div className="grid grid-cols-2 gap-2"><Field label="Start date"><Input type="date" value={duration.start} onChange={(event) => setDuration({ ...duration, start: event.target.value })} className="h-9 min-w-[132px] text-[12px]" /></Field><Field label="End date"><Input type="date" value={duration.end} onChange={(event) => setDuration({ ...duration, end: event.target.value })} className="h-9 min-w-[132px] text-[12px]" /></Field></div></div>
-              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Holdout period</p><div className="grid grid-cols-2 gap-2 opacity-100 data-[disabled=true]:opacity-45" data-disabled={!holdoutEnabled}><Field label="Start date"><Input disabled={!holdoutEnabled} type="date" value={duration.holdoutStart} onChange={(event) => setDuration({ ...duration, holdoutStart: event.target.value })} className="h-9 min-w-[132px] text-[12px]" /></Field><Field label="End date"><Input disabled={!holdoutEnabled} type="date" value={duration.holdoutEnd} onChange={(event) => setDuration({ ...duration, holdoutEnd: event.target.value })} className="h-9 min-w-[132px] text-[12px]" /></Field></div></div>
+              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Model duration</p><div className="grid grid-cols-2 gap-2"><Field label="Start date"><Input type="text" value={duration.start} onChange={(event) => setDuration({ ...duration, start: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field><Field label="End date"><Input type="text" value={duration.end} onChange={(event) => setDuration({ ...duration, end: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field></div></div>
+              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Holdout period</p><div className="grid grid-cols-2 gap-2 opacity-100 data-[disabled=true]:opacity-45" data-disabled={!holdoutEnabled}><Field label="Start date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutStart} onChange={(event) => setDuration({ ...duration, holdoutStart: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field><Field label="End date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutEnd} onChange={(event) => setDuration({ ...duration, holdoutEnd: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field></div></div>
             </div>
           </div>
         </section>
