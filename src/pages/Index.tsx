@@ -409,15 +409,16 @@ const Index = () => {
   };
 
   const handleRunModel = (baseMessages = messages) => {
+    setModelRunPending(true);
     setMessages([
       ...baseMessages,
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Model run completed.\n\n**Model Summary**\n\n| Item | Value |\n|---|---:|\n| Dependent variable | Sales |\n| Model duration | 08/01/2022 – 22/02/2025 |\n| Mandatory variables | 16 |\n| Optional variables | 3 |\n| Transformations used | S Curve, Adstock, Direct |\n| Model outputs generated | 3,645 |\n| Estimated processing time | 04m |\n\n**Qualifying criteria snapshot**\n\n| Criterion | Target | Status |\n|---|---:|---|\n| R² | ≥ 60% | Passed |\n| Adj-R² | ≥ 55% | Passed |\n| MAPE | ≤ 15% | Passed |\n| Holdout MAPE | ≤ 15% | Passed |\n| Durbin-Watson | 1.2–2.5 | Passed |\n\nNext I can compare model outputs, explain the selected winner, or continue the chain into model interpretation.",
+        text: "Model run will be triggered shortly. Please confirm the below selections before I proceed.\n\n**Configuration summary**\n\n| Item | Selection |\n|---|---:|\n| KPI | Sales |\n| Model type | Unpooled |\n| Model form | Additive |\n| Model duration | 2022-01-08 – 2025-02-22 |\n| Holdout | On · 2024-07-08 – 2025-02-22 |\n| Variables selected | 9 of 40 |\n| Mandatory / optional | 7 / 2 |\n| Transformations | Adstock, Gamma, Direct |\n| Saturation | S-curve, Gamma, None |\n| Priors | Contribution and co-efficient ranges set |\n| QC gates | R², Adj-R², MAPE, Holdout MAPE, Durbin-Watson |\n\nCan I go ahead and trigger the model?",
       },
     ]);
-    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
+    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
     setThinking(false);
   };
 
