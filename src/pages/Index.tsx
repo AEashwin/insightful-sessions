@@ -233,6 +233,21 @@ const Index = () => {
       return;
     }
 
+    if (/\b(model config|model configuration|configure model|model setup)\b/i.test(text)) {
+      setMessages([
+        ...history,
+        {
+          id: `a${Date.now() + 1}`,
+          role: "assistant",
+          text: "Here is **Model Configuration**. You can edit KPI, model type/form, duration, holdout, selected variables, transformations, priors, and QC directly in the UI. Use View transformations / priors / QC to expose those editable settings.",
+          card: "configuration",
+        },
+      ]);
+      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
+      setThinking(false);
+      return;
+    }
+
     const chainReply = getSkillChainReply(text, chain);
     if (chainReply) {
       setChain(chainReply.nextState);
