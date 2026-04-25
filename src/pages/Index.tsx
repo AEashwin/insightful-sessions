@@ -382,6 +382,52 @@ function renderText(text: string) {
   );
 }
 
+function chainMessage(text: string, card?: CardKey): Message {
+  return { id: `chain-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text, card };
+}
+
+function getSkillChainReply(text: string, state: SkillChainState): { nextState: SkillChainState; messages: Message[] } | null {
+  const input = text.trim().toLowerCase();
+  const isStart = /\b(skill chain|mmm chain|autopilot|guided|datacube uploaded|data cube uploaded|start mmm)\b/i.test(text);
+  if (!state.active && !isStart) return null;
+
+  if (/\b(stop|pause)\b/.test(input)) {
+    return { nextState: { ...state, active: true }, messages: [chainMessage(`⏸ Chain paused — Project: ${projectContext.project} | Step ${state.step} | Batch ${state.currentBatch}. Say continue, autopilot, guided, or switch project when ready.`)] };
+  }
+
+  if (!state.active || state.waitingFor === "mode") {
+    if (/\b(b|autopilot)\b/.test(input)) {
+      return { nextState: { active: true, runMode: "autopilot", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Autopilot\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
+    }
+    if (/\b(a|guided)\b/.test(input)) {
+      return { nextState: { active: true, runMode: "guided", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Guided\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
+    }
+    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. Before we begin, how would you like to run?\n\nOption A — Guided: I'll pause at each step and wait for your go-ahead before moving on.\n\nOption B — Autopilot: I'll run the full workflow automatically with live updates in chat. I'll only stop where I genuinely need your input (datacube upload, spend upload, classification approval, DRD questions, ROI parameters). You can say stop any time.\n\nWhich would you like — A or B?")] };
+  }
+
+  if (state.waitingFor === "datacube" && /\b(datacube uploaded|data cube uploaded|uploaded|continue)\b/.test(input)) {
+    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages: [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\n⏸ Autopilot paused — input needed: please review and approve the variable classification hierarchy. Say continue when ready, or stop to exit autopilot.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")] };
+  }
+
+  if (state.waitingFor === "classification" && /\b(continue|approved|approve|yes|go|next)\b/.test(input)) {
+    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages: [chainMessage(`✅ Step 1 complete — Data Quality & Setup | Project: ${projectContext.project}\nMoving to Step 2 — DRD. Starting brand and market Q&A now.\n\n⏸ Autopilot paused — input needed: share any brand, market, competitor, seasonality, or business context I should include in the DRD.`)] };
+  }
+
+  if (state.waitingFor === "drd" && input.length > 8) {
+    return { nextState: { ...state, step: 4, currentBatch: 1, waitingFor: "modelReady" }, messages: [chainMessage(`✅ Step 2 complete — DRD | Project: ${projectContext.project}\nGenerated DRD summary and captured your market context.\n\n✅ Step 3 complete — Config (Batch 1) | Project: ${projectContext.project}\n⏸ Autopilot paused — model needs to run. Triggering the model run in DD now — I'll continue once results are available. Say ready when results are available.`, "transformations")] };
+  }
+
+  if (state.waitingFor === "modelReady" && /\b(ready|results available|continue)\b/.test(input)) {
+    return { nextState: { ...state, step: 4, currentBatch: 3, waitingFor: "checkpoint" }, messages: [chainMessage(`⚠️ Batch 1 — Issues found. Health: 11/19\n- Incremental contribution is low at 14.3%\n- TV prior is too tight for observed response\n- Online coupon is over-attributing base demand\n\nAuto-generating revised config (Batch 2)...\n\n⚠️ Batch 2 — Issues found. Health: 14/19\n- R² improved to 80.1%\n- Incremental moved to 16.2%\n- Remaining issue: digital saturation still too flat\n\nAuto-generating revised config (Batch 3)...\n\n⏸ Autopilot checkpoint — Batch 3 Project: ${projectContext.project}\n\n| Batch | R² | MAPE | Health | Incremental% | Key change made |\n|---|---:|---:|---:|---:|---|\n| 1 | 78.2% | 6.8% | 11 / 19 | 14.3% | Initial config |\n| 2 | 80.1% | 6.1% | 14 / 19 | 16.2% | Loosened TV prior |\n| 3 | 81.4% | 5.9% | 17 / 19 | 18.1% | Tightened Online Coupon |\n\nOptions: continue — keep iterating automatically; sign off — accept this model and move to summary sheet; stop — pause autopilot and review manually.`, "results")] };
+  }
+
+  if (state.waitingFor === "checkpoint" && /\b(sign off|good model|this is fine|summary|continue|yes)\b/.test(input)) {
+    return { nextState: { ...state, step: 6, waitingFor: "complete" }, messages: [chainMessage(`✅ Step 4 complete — Model signed off (Batch 3) | Project: ${projectContext.project}\nHealth: 17/19 | R²: 81.4% | Incremental: 18.1%\n\nSkipping optimization and moving to summary sheet now.\n\n✅ Step 5 complete — Summary Sheet | Project: ${projectContext.project}\nMoving to final presentation now.\n\nStep 6 — mmm-final-presentation hasn't been built yet. The chain will pause here. All other outputs are ready.`, "summary")] };
+  }
+
+  return null;
+}
+
 interface ChatStageProps {
   messages: Message[];
   thinking: boolean;
