@@ -1,28 +1,69 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FolderPlus, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
-const bus = ["NorthAmerica", "Europe", "Asia-Pac", "LATAM"];
-const markets = ["UK", "US", "France", "Germany", "Australia", "Japan", "India", "Brazil"];
-const kpis = ["Sales Volume", "Revenue", "Market Share", "Brand Awareness", "Conversions"];
+const hierarchy: Record<string, Record<string, string[]>> = {
+  Europe: {
+    UK: ["Brand4", "Chocolate"],
+    France: ["Skincare"],
+    Germany: ["Pharma"],
+  },
+  NorthAmerica: {
+    US: ["Snacks"],
+  },
+  "Asia-Pac": {
+    Australia: ["Beverage"],
+    Japan: ["Coffee"],
+    India: ["Cereal"],
+  },
+  LATAM: {
+    Brazil: ["Beverage", "Skincare"],
+  },
+};
+
+const bus = Object.keys(hierarchy);
+
+function buForMarket(market: string) {
+  return bus.find((bu) => Object.keys(hierarchy[bu]).includes(market)) ?? "Europe";
+}
 
 interface Props {
-  onCreate?: (project: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
-  initial?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
+  onCreate?: (project: { name: string; brand: string; market: string; bu: string }) => void;
+  initial?: Partial<{ name: string; brand: string; market: string; bu: string }>;
 }
 
 export function NewProjectCard({ onCreate, initial }: Props = {}) {
+  const initialBu = initial?.market ? buForMarket(initial.market) : initial?.bu ?? "Europe";
+  const initialMarket = initial?.market && hierarchy[initialBu]?.[initial.market] ? initial.market : Object.keys(hierarchy[initialBu])[0];
   const [name, setName] = useState(initial?.name ?? "");
-  const [brand, setBrand] = useState(initial?.brand ?? "");
-  const [bu, setBu] = useState(initial?.bu ?? "Europe");
-  const [market, setMarket] = useState(initial?.market ?? "UK");
-  const [kpi, setKpi] = useState(initial?.kpi ?? "Sales Volume");
-  const [notes, setNotes] = useState("");
+  const [bu, setBu] = useState(initialBu);
+  const [market, setMarket] = useState(initialMarket);
+  const [brand, setBrand] = useState(
+    initial?.brand && hierarchy[initialBu]?.[initialMarket]?.includes(initial.brand)
+      ? initial.brand
+      : hierarchy[initialBu][initialMarket][0],
+  );
+
+  const markets = useMemo(() => Object.keys(hierarchy[bu]), [bu]);
+  const brands = hierarchy[bu][market] ?? [];
 
   const canCreate = name.trim() && brand.trim();
+
+  const handleBuChange = (nextBu: string) => {
+    const nextMarket = Object.keys(hierarchy[nextBu])[0];
+    setBu(nextBu);
+    setMarket(nextMarket);
+    setBrand(hierarchy[nextBu][nextMarket][0]);
+  };
+
+  const handleMarketChange = (nextMarket: string) => {
+    const nextBu = buForMarket(nextMarket);
+    setBu(nextBu);
+    setMarket(nextMarket);
+    setBrand(hierarchy[nextBu][nextMarket][0]);
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -49,30 +90,16 @@ export function NewProjectCard({ onCreate, initial }: Props = {}) {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Brand</Label>
-            <Input
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              placeholder="e.g. Chocolate"
-              className="h-8 text-xs"
-            />
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Selected brand</Label>
+            <div className="h-8 rounded-md border border-border bg-muted/40 px-3 flex items-center text-xs font-medium text-foreground">
+              {brand}
+            </div>
           </div>
         </div>
 
-        <ChipRow label="BU" options={bus} value={bu} onChange={setBu} />
-        <ChipRow label="Market" options={markets} value={market} onChange={setMarket} />
-        <ChipRow label="KPI" options={kpis} value={kpi} onChange={setKpi} />
-
-        <div className="space-y-1">
-          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Notes (optional)</Label>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Anything specific about this engagement..."
-            rows={2}
-            className="text-xs resize-none"
-          />
-        </div>
+        <ChipRow label="BU" options={bus} value={bu} onChange={handleBuChange} />
+        <ChipRow label="Market" options={markets} value={market} onChange={handleMarketChange} />
+        <ChipRow label="Brand" options={brands} value={brand} onChange={setBrand} />
 
         <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 flex items-start gap-2">
           <Sparkles size={11} className="text-primary mt-0.5 shrink-0" />
@@ -88,7 +115,7 @@ export function NewProjectCard({ onCreate, initial }: Props = {}) {
           size="sm"
           className="h-7 text-[11px] gap-1"
           disabled={!canCreate}
-          onClick={() => onCreate?.({ name, brand, market, bu, kpi })}
+          onClick={() => onCreate?.({ name, brand, market, bu })}
         >
           <FolderPlus size={11} /> Create project
         </Button>
