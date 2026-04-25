@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { CalendarDays, ChevronDown, ChevronRight, Play, SlidersHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -106,5 +105,4 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="space-y-1"><span className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</span>{children}</label>; }
-function ValueBox({ children }: { children: React.ReactNode }) { return <div className="flex h-8 items-center rounded-md border border-input bg-background px-3 text-[11px] text-foreground">{children}</div>; }
 function DetailButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) { return <button type="button" onClick={onClick} className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-semibold transition-colors ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"}`}>{active ? <ChevronDown size={11} /> : <ChevronRight size={11} />}{label}</button>; }
