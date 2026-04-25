@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Download, FileSpreadsheet, Info, Upload, Wand2 } from "lucide-react";
+import { ArrowRight, Check, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,7 +29,7 @@ export function SpendMappingCard() {
         </div>
       </div>
 
-      <div className="grid gap-3 bg-muted/20 p-3 lg:grid-cols-[1fr_220px]">
+      <div className="bg-muted/20 p-3">
         <div className="space-y-2">
           <div className="grid grid-cols-4 gap-1 rounded-lg border border-border bg-card p-1">
             {tabs.map((tab, index) => (
@@ -39,42 +39,16 @@ export function SpendMappingCard() {
             ))}
           </div>
 
-          <div className="rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-[11px] text-foreground">
-            <div className="flex items-center justify-between gap-3">
-              <span className="flex items-center gap-2"><Info size={12} className="text-warning" /> 3 groups are missing spend data. Download template, fill spend, and upload.</span>
-              <Button size="sm" variant="outline" className="h-7 gap-1 text-[10px]"><FileSpreadsheet size={11} /> Template</Button>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
+          <div className="grid gap-1.5 xl:grid-cols-2">
             {channels.map((channel) => (
               <ChannelPanel key={channel.id} channel={channel} />
             ))}
           </div>
         </div>
-
-        <aside className="space-y-2">
-          <div className="rounded-lg border border-border bg-card p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Coverage</p>
-            <div className="mt-2 space-y-2">
-              <Metric label="Mapped" value="14" note="74%" />
-              <Metric label="Missing spend" value="3" note="Promotions" />
-              <Metric label="Spend only" value="2" note="Allowed" />
-            </div>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">AI checks</p>
-            <div className="mt-2 space-y-1.5 text-[11px] text-muted-foreground">
-              <p className="flex items-center gap-1.5 text-success"><Check size={11} /> Spend periodicity matches weekly</p>
-              <p className="flex items-center gap-1.5 text-success"><Check size={11} /> Currency detected as GBP</p>
-              <p className="flex items-center gap-1.5 text-warning"><Wand2 size={11} /> Meta split needs approval</p>
-            </div>
-          </div>
-        </aside>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-[11px] text-muted-foreground">Single-view review: mapping, missing spend, spend-only exceptions, upload action, and AI checks.</span>
+        <span className="text-[11px] text-muted-foreground">Review mappings, upload corrected spend, then confirm in chat to continue.</span>
         <Button size="sm" className="h-8 gap-1 text-[11px]"><ArrowRight size={12} /> Proceed to variable properties</Button>
       </div>
     </div>
@@ -112,15 +86,6 @@ function ChannelPanel({ channel }: { channel: typeof channels[number] }) {
 function StatusBadge({ tone, label }: { tone: string; label: string }) {
   const classes = tone === "success" ? "border-success/25 bg-success/10 text-success" : tone === "warning" ? "border-warning/25 bg-warning/10 text-warning" : tone === "destructive" ? "border-destructive/25 bg-destructive/10 text-destructive" : "border-primary/25 bg-primary/10 text-primary";
   return <Badge variant="outline" className={`h-5 text-[9px] ${classes}`}>{label}</Badge>;
-}
-
-function Metric({ label, value, note }: { label: string; value: string; note: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-2 py-1.5">
-      <span className="text-[11px] text-muted-foreground">{label}</span>
-      <span className="text-right text-xs font-semibold text-foreground">{value} <span className="text-[10px] font-normal text-muted-foreground">{note}</span></span>
-    </div>
-  );
 }
 
 function IconButton({ label, children }: { label: string; children: React.ReactNode }) {
