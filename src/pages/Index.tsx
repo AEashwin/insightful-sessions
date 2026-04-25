@@ -46,7 +46,7 @@ interface Message {
   role: "user" | "assistant";
   text?: string;
   card?: CardKey;
-  prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
+  prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
 }
 
 const projects: Project[] = [
@@ -94,13 +94,14 @@ const renderCard = (
   key: CardKey,
   ctx: {
     onPickProject?: (id: string, name: string) => void;
-    onCreateProject?: (p: { name: string; brand: string; market: string; bu: string; kpi: string }) => void;
-    prefill?: Partial<{ name: string; brand: string; market: string; bu: string; kpi: string }>;
+    onCreateProject?: (p: { name: string; brand: string; market: string; bu: string }) => void;
+    onNewProject?: () => void;
+    prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
   },
 ) => {
   switch (key) {
     case "project": return <ProjectSummaryCard />;
-    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} />;
+    case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <VariableGroupsCard />;
