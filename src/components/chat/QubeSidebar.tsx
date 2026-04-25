@@ -1,4 +1,5 @@
-import { Plus, Search, MessageSquare, MoreHorizontal, Folder, TrendingUp, Tag, BarChart3, Sparkles, ChevronsLeft } from "lucide-react";
+import { useState } from "react";
+import { Plus, Search, MessageSquare, Folder, TrendingUp, Tag, BarChart3, Sparkles, ChevronsLeft, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
@@ -118,11 +119,15 @@ export function QubeSidebar({
   onNewChat,
   onNewProject,
 }: QubeSidebarProps) {
+  const [projectSearch, setProjectSearch] = useState("");
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const activeTool = tools.find((t) => t.id === activeToolId) ?? tools[0];
   const projectThreads = threads.filter((t) => t.projectId === activeProjectId);
+  const filteredProjects = projects.filter((p) =>
+    `${p.name} ${p.brand} ${p.market}`.toLowerCase().includes(projectSearch.toLowerCase()),
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -191,7 +196,7 @@ export function QubeSidebar({
                               {activeProject?.brand} · {activeProject?.market}
                             </p>
                           </div>
-                          <MoreHorizontal size={14} className="text-muted-foreground shrink-0" />
+                          <ChevronDown size={14} className="text-muted-foreground shrink-0" />
                         </>
                       )}
                     </button>
@@ -207,7 +212,18 @@ export function QubeSidebar({
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5">
                   Projects in {activeTool.name}
                 </p>
-                {projects.map((p) => (
+                <div className="px-2 pb-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative">
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      placeholder="Search projects"
+                      className="h-8 pl-7 text-xs"
+                    />
+                  </div>
+                </div>
+                {filteredProjects.map((p) => (
                   <DropdownMenuItem
                     key={p.id}
                     onClick={() => onSelectProject(p.id)}
@@ -219,6 +235,9 @@ export function QubeSidebar({
                     </span>
                   </DropdownMenuItem>
                 ))}
+                {filteredProjects.length === 0 && (
+                  <p className="px-2 py-2 text-xs text-muted-foreground">No matching projects</p>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onNewProject}>
                   <Plus size={12} className="mr-2" />
