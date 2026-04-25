@@ -8,7 +8,6 @@ import { ProjectSummaryCard } from "@/components/chat/cards/ProjectSummaryCard";
 import { ProjectSelectorCard } from "@/components/chat/cards/ProjectSelectorCard";
 import { NewProjectCard } from "@/components/chat/cards/NewProjectCard";
 import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
-import { VariableGroupsCard } from "@/components/chat/cards/VariableGroupsCard";
 import { VariablePropertiesCard } from "@/components/chat/cards/VariablePropertiesCard";
 import { SpendMappingCard } from "@/components/chat/cards/SpendMappingCard";
 import { ModelTransformationsCard } from "@/components/chat/cards/ModelTransformationsCard";
@@ -104,7 +103,7 @@ const renderCard = (
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
-    case "groups": return <VariableGroupsCard />;
+    case "groups": return <ClassificationCard />;
     case "properties": return <VariablePropertiesCard />;
     case "mapping": return <SpendMappingCard />;
     case "transformations": return <ModelTransformationsCard />;
