@@ -168,6 +168,7 @@ const Index = () => {
   const [thinking, setThinking] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("light");
   const [palette, setPalette] = useState<ColorPalette>("purple");
+  const [chain, setChain] = useState<SkillChainState>({ active: false, step: 0, currentBatch: 1 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -201,6 +202,14 @@ const Index = () => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
     const history = [...messages, userMsg];
     setMessages(history);
+
+    const chainReply = getSkillChainReply(text, chain);
+    if (chainReply) {
+      setChain(chainReply.nextState);
+      setMessages([...history, ...chainReply.messages]);
+      setThinking(false);
+      return;
+    }
 
     if (/\b(create|start|set up)\b.*\bnew project\b/i.test(text)) {
       setActiveThreadId("");
