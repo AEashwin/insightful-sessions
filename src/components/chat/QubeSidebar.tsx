@@ -177,36 +177,36 @@ export function QubeSidebar({
           <div className={cn("px-2 pb-2", collapsed && "px-1.5")}>
             <DropdownMenu onOpenChange={(open) => open && setProjectSearch("")}>
               <DropdownMenuTrigger asChild>
-                <Tooltip delayDuration={200}>
-                  <TooltipTrigger asChild>
-                    <button
-                      className={cn(
-                        "w-full flex items-center gap-2 rounded-md hover:bg-sidebar-accent transition-colors text-left",
-                        collapsed ? "justify-center h-9" : "px-2.5 py-2",
-                      )}
-                    >
-                      <Folder size={14} className="text-muted-foreground shrink-0" />
-                      {!collapsed && (
-                        <>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-sidebar-foreground truncate">
-                              {activeProject?.name}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground truncate">
-                              {activeProject?.brand} · {activeProject?.market}
-                            </p>
-                          </div>
-                          <ChevronDown size={14} className="text-muted-foreground shrink-0" />
-                        </>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent side="right">
-                      {activeProject?.name}
-                    </TooltipContent>
+                <div className="relative group/project">
+                  <button
+                    type="button"
+                    aria-label={collapsed ? `Open project picker for ${activeProject?.name ?? "current project"}` : "Open project picker"}
+                    className={cn(
+                      "w-full flex items-center gap-2 rounded-md hover:bg-sidebar-accent transition-colors text-left",
+                      collapsed ? "justify-center h-9" : "px-2.5 py-2",
+                    )}
+                  >
+                    <Folder size={14} className="text-muted-foreground shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-sidebar-foreground truncate">
+                            {activeProject?.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {activeProject?.brand} · {activeProject?.market}
+                          </p>
+                        </div>
+                        <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+                      </>
+                    )}
+                  </button>
+                  {collapsed && activeProject?.name && (
+                    <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity group-hover/project:opacity-100">
+                      {activeProject.name}
+                    </div>
                   )}
-                </Tooltip>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-72" align="start">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5">
