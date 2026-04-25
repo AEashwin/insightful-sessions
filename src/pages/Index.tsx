@@ -456,12 +456,12 @@ function ChatStage({
 }
 
 function AuthScreen() {
-  const [mode, setMode] = useState<"signup" | "signin">("signup");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"signup" | "signin">("signin");
+  const [firstName, setFirstName] = useState("John");
+  const [lastName, setLastName] = useState("Davies");
+  const [organization, setOrganization] = useState("Analytic Edge");
+  const [email, setEmail] = useState("john.davies@analyticedge.com");
+  const [password, setPassword] = useState("DemoPassword123!");
   const [license, setLicense] = useState<"modeler" | "viewer">("modeler");
   const [selectedTools, setSelectedTools] = useState(["demand-drivers"]);
   const [submitting, setSubmitting] = useState(false);
