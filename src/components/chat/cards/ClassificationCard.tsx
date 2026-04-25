@@ -122,7 +122,11 @@ const groupLabel = (nodes: GroupNode[], groupId: string): string | null => {
   return null;
 };
 
-export function ClassificationCard() {
+interface ClassificationCardProps {
+  onConfirm?: () => void;
+}
+
+export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
   const [buckets, setBuckets] = useState(initialBuckets);
   const [selected, setSelected] = useState<string[]>([]);
   const [newGroupFor, setNewGroupFor] = useState<string | null>(null);
@@ -193,9 +197,6 @@ export function ClassificationCard() {
             </div>
             <IconButton label="Import"><Upload size={13} /></IconButton>
             <IconButton label="Export"><Download size={13} /></IconButton>
-            <Button size="sm" className="h-8 gap-1 text-[11px]" onClick={() => setConfirmed(true)}>
-              Confirm <Check size={12} />
-            </Button>
           </div>
         </div>
       </div>
@@ -246,17 +247,29 @@ export function ClassificationCard() {
         </div>
       )}
 
-      {(selected.length > 0 || confirmed) && (
-        <div className="border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
-          {selected.length > 0 && <span>{selected.length} selected. Click any group title, or drag the selected chips into a group.</span>}
-          {confirmed && (
-            <div className="space-y-1">
-              <p className="font-semibold text-foreground">DD assistant: Confirmed. Changes made:</p>
-              {(changeLog.length ? changeLog : ["No manual classification changes were made."]).map((item, index) => <p key={`${item}-${index}`}>• {item}</p>)}
-            </div>
-          )}
+      <div className="border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-h-4">
+            {selected.length > 0 && <span>{selected.length} selected. Click any group title, or drag the selected chips into a group.</span>}
+            {confirmed && (
+              <div className="space-y-1">
+                <p className="font-semibold text-foreground">DD assistant: Confirmed. Changes made:</p>
+                {(changeLog.length ? changeLog : ["No manual classification changes were made."]).map((item, index) => <p key={`${item}-${index}`}>• {item}</p>)}
+              </div>
+            )}
+          </div>
+          <Button
+            size="sm"
+            className="h-8 shrink-0 gap-1 text-[11px]"
+            onClick={() => {
+              setConfirmed(true);
+              onConfirm?.();
+            }}
+          >
+            Confirm classification <Check size={12} />
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
