@@ -10,6 +10,7 @@ import { NewProjectCard } from "@/components/chat/cards/NewProjectCard";
 import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
 import { VariablePropertiesCard } from "@/components/chat/cards/VariablePropertiesCard";
 import { SpendMappingCard } from "@/components/chat/cards/SpendMappingCard";
+import { ModelConfigurationCard } from "@/components/chat/cards/ModelConfigurationCard";
 import { ModelTransformationsCard } from "@/components/chat/cards/ModelTransformationsCard";
 import { ModelResultsCard } from "@/components/chat/cards/ModelResultsCard";
 import { ModelSummaryCard } from "@/components/chat/cards/ModelSummaryCard";
@@ -40,6 +41,7 @@ type CardKey =
   | "groups"
   | "properties"
   | "mapping"
+  | "configuration"
   | "transformations"
   | "results"
   | "summary"
@@ -131,6 +133,8 @@ const renderCard = (
     onCreateProject?: (p: { name: string; brand: string; market: string; bu: string }) => void;
     onNewProject?: () => void;
     onClassificationConfirm?: () => void;
+    onVariablePropertiesSave?: () => void;
+    onRunModel?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
   },
 ) => {
@@ -140,8 +144,9 @@ const renderCard = (
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
     case "upload": return <DataUploadCard />;
     case "groups": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
-    case "properties": return <VariablePropertiesCard />;
+    case "properties": return <VariablePropertiesCard onSave={ctx.onVariablePropertiesSave} />;
     case "mapping": return <SpendMappingCard />;
+    case "configuration": return <ModelConfigurationCard onRunModel={ctx.onRunModel} />;
     case "transformations": return <ModelTransformationsCard />;
     case "results": return <ModelResultsCard />;
     case "summary": return <ModelSummaryCard />;
