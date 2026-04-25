@@ -28,10 +28,13 @@ const availableVariables = [
 ].map((name, index) => ({
   name,
   group: index < 7 ? "Digital" : index < 11 ? "Promotion" : index < 18 ? "Control" : index < 23 ? "Competition" : "Events",
+  role: "Optional",
   transform: index % 4 === 0 ? "Gamma" : index % 3 === 0 ? "Adstock" : "Direct",
   decay: index % 3 === 0 ? ["0.10", "0.80", "0.10"] : ["—", "—", "—"],
-  gamma: index % 4 === 0 ? ["0.50", "2.50", "0.25"] : ["—", "—", "—"],
-  period: index % 3 === 0 || index % 4 === 0 ? ["1", "6", "1"] : ["—", "—", "—"],
+  build: index % 4 === 0 ? ["0.50", "2.50", "0.25"] : ["—", "—", "—"],
+  period: index % 4 === 0 ? ["1", "6", "1"] : ["—", "—", "—"],
+  saturation: index % 4 === 0 ? "Gamma" : index % 3 === 0 ? "S-curve" : "None",
+  contribution: index > 17 && index < 23 ? "Coefficient" : "Positive",
   prior: index > 17 && index < 23 ? ["-80", "80"] : ["0", "80"],
 }));
 
@@ -43,7 +46,7 @@ const qcRows = [
   { name: "Durbin-Watson", min: "1.2", max: "2.5", weight: "", enabled: true },
 ];
 
-type DetailView = "none" | "transformations" | "priors" | "qc";
+type DetailView = "none" | "transformations" | "saturation" | "priors" | "qc";
 
 export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void }) {
   const [detail, setDetail] = useState<DetailView>("none");
@@ -62,7 +65,7 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
     setVariables((current) => current.map((row) => (row.name === name ? { ...row, ...patch } : row)));
   };
 
-  const updateRange = (name: string, key: "decay" | "gamma" | "period" | "prior", index: number, value: string) => {
+  const updateRange = (name: string, key: "decay" | "build" | "period" | "prior", index: number, value: string) => {
     setVariables((current) => current.map((row) => {
       if (row.name !== name) return row;
       const next = [...row[key]] as string[];
