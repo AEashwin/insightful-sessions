@@ -18,7 +18,7 @@ import { OptimisationCard } from "@/components/chat/cards/OptimisationCard";
 import { FlightingCard } from "@/components/chat/cards/FlightingCard";
 import { WorkflowCard } from "@/components/chat/cards/WorkflowCard";
 import { ClassificationCard } from "@/components/chat/cards/ClassificationCard";
-import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
