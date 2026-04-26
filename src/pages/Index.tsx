@@ -553,6 +553,16 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
   }
 
   if (baseState.waitingFor === "classification") {
+    if (/\b(confirm|confirmed|done|looks good|proceed|approve)\b/.test(input)) {
+      return {
+        nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" },
+        messages: [
+          chainMessage("Great — classification locked. Let me pull up spend mapping..."),
+          chainMessage("To calculate response curves and ROIs, each media metric needs a matching spend variable. I’ll map what I can automatically and flag anything that needs your review.", "mapping"),
+          chainMessage("I’ve auto-mapped spends to most variables. A few need review before we lock this step. Check the mapping table, then say **confirm** when it looks good."),
+        ],
+      };
+    }
     if (baseState.runMode === "guided" && /\b(yes|ready|go|next|continue)\b/.test(input)) {
       return { nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" }, messages: classificationMessages(baseState.runMode) };
     }
