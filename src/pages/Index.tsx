@@ -68,7 +68,7 @@ interface Message {
 type ThemeMode = "light" | "dark";
 type ColorPalette = "purple" | "analyst" | "cockpit";
 type RunMode = "guided" | "autopilot";
-type ChainGate = "projectPick" | "mode" | "projectExplain" | "datacube" | "classification" | "spendConfirm" | "modelConfig" | "modelResults" | "complete";
+type ChainGate = "projectPick" | "mode" | "projectExplain" | "datacube" | "classification" | "spendConfirm" | "modelConfig" | "modelResults" | "drd" | "modelReady" | "checkpoint" | "complete";
 
 interface SkillChainState {
   active: boolean;
