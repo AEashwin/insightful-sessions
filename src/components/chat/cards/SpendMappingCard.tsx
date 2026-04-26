@@ -14,7 +14,7 @@ const channels = [
 
 const tabs = ["All 19", "Mapped 14", "Missing 3", "Spend only 2"];
 
-export function SpendMappingCard() {
+export function SpendMappingCard({ onProceed }: { onProceed?: () => void }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="flex flex-col gap-2 border-b border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
@@ -25,7 +25,7 @@ export function SpendMappingCard() {
         <div className="flex items-center gap-1.5">
           <IconButton label="Download template"><Download size={13} /></IconButton>
           <IconButton label="Upload spend file"><Upload size={13} /></IconButton>
-          <Button size="sm" className="h-8 gap-1 text-[11px]"><Check size={12} /> Confirm</Button>
+          <Button size="sm" className="h-8 gap-1 text-[11px]" onClick={onProceed}><Check size={12} /> Confirm</Button>
         </div>
       </div>
 
@@ -48,8 +48,8 @@ export function SpendMappingCard() {
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-[11px] text-muted-foreground">Review mappings, upload corrected spend, then confirm in chat to continue.</span>
-        <Button size="sm" className="h-8 gap-1 text-[11px]"><ArrowRight size={12} /> Proceed to variable properties</Button>
+        <span className="text-[11px] text-muted-foreground">Review mappings, upload corrected spend, then proceed to model configuration.</span>
+        <Button size="sm" className="h-8 gap-1 text-[11px]" onClick={onProceed}><ArrowRight size={12} /> Proceed to model configuration</Button>
       </div>
     </div>
   );

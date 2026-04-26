@@ -135,6 +135,7 @@ const renderCard = (
     onGuidedContinue?: () => void;
     onGuidedPause?: () => void;
     onDataUploadProceed?: () => void;
+    onSpendMappingProceed?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
     guidedStep?: Message["guidedStep"];
   },
@@ -146,7 +147,7 @@ const renderCard = (
     case "upload": return <DataUploadCard onProceed={ctx.onDataUploadProceed} />;
     case "groups": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
     case "properties": return <VariablePropertiesCard onSave={ctx.onVariablePropertiesSave} />;
-    case "mapping": return <SpendMappingCard />;
+    case "mapping": return <SpendMappingCard onProceed={ctx.onSpendMappingProceed} />;
     case "configuration": return <ModelConfigurationCard onRunModel={ctx.onRunModel} />;
     case "generation": return <ModelGenerationCard />;
     case "modeSelection": return <ModeSelectionCard onSelect={ctx.onModeSelect} />;
@@ -370,6 +371,10 @@ const Index = () => {
     handleSend("file uploaded");
   };
 
+  const handleSpendMappingProceed = () => {
+    handleSend("confirm");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -413,6 +418,7 @@ const Index = () => {
           onGuidedContinue={handleGuidedContinue}
           onGuidedPause={handleGuidedPause}
           onDataUploadProceed={handleDataUploadProceed}
+          onSpendMappingProceed={handleSpendMappingProceed}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -640,6 +646,7 @@ interface ChatStageProps {
   onGuidedContinue: () => void;
   onGuidedPause: () => void;
   onDataUploadProceed: () => void;
+  onSpendMappingProceed: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -667,6 +674,7 @@ function ChatStage({
   onGuidedContinue,
   onGuidedPause,
   onDataUploadProceed,
+  onSpendMappingProceed,
   theme,
   palette,
   onToggleTheme,
@@ -761,7 +769,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, onDataUploadProceed, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, onDataUploadProceed, onSpendMappingProceed, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
