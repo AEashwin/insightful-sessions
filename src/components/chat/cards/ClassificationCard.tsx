@@ -181,8 +181,8 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-background px-3 py-2">
+    <div className="overflow-hidden rounded-lg border border-primary/20 bg-card shadow-sm">
+      <div className="border-b border-primary/15 bg-sidebar-accent/70 px-3 py-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Variable Classification</h3>
@@ -201,13 +201,13 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-2 bg-muted/30 p-3 lg:grid-cols-3">
+      <div className="grid gap-2 bg-gradient-to-b from-sidebar-accent/45 to-card p-3 lg:grid-cols-3">
         {[buckets[0], buckets[1], buckets[2]].map((bucket) => (
           <BucketPanel key={bucket.id} bucket={bucket} count={counts.bucketCount(bucket)} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
         ))}
       </div>
 
-      <div className="grid gap-2 bg-muted/30 px-3 pb-2 lg:grid-cols-2">
+      <div className="grid gap-2 bg-card px-3 pb-2 lg:grid-cols-2">
         {[buckets[3], buckets[4]].map((bucket) => (
           <BucketPanel
             key={bucket.id}
@@ -224,7 +224,7 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
         ))}
       </div>
 
-      <div className="bg-muted/30 px-3 pb-3">
+      <div className="bg-card px-3 pb-3">
         <BucketPanel bucket={buckets[5]} count={counts.unresolved} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
       </div>
 
