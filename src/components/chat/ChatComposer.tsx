@@ -55,7 +55,7 @@ export function ChatComposer({ onSend, suggestions = defaultSuggestions, maxWidt
               <button
                 key={s}
                 onClick={() => onSend(s)}
-                className="shrink-0 px-2.5 py-1 rounded-full border border-border bg-muted/30 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="shrink-0 rounded border-[0.5px] border-primary/20 bg-primary/5 px-[7px] py-0.5 text-[10px] text-primary/70 transition-colors hover:border-primary/35"
               >
                 {s}
               </button>
