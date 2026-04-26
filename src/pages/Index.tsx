@@ -133,7 +133,11 @@ const renderCard = (
     onClassificationConfirm?: () => void;
     onVariablePropertiesSave?: () => void;
     onRunModel?: () => void;
+    onModeSelect?: (mode: RunMode) => void;
+    onGuidedContinue?: () => void;
+    onGuidedPause?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
+    guidedStep?: Message["guidedStep"];
   },
 ) => {
   switch (key) {
