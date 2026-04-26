@@ -591,9 +591,9 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
     return {
       nextState: { ...baseState, step: 5, waitingFor: "modelResults" },
       messages: [
-        chainMessage("✅ Model run triggered.\n\nThis typically takes 8–12 minutes. I'll update you as results come in."),
-        chainMessage("Results are in. Here's the model output — qualified models are ranked by health score, disqualified models show the reason, and I've highlighted my recommended model based on R², MAPE, and incremental contribution.", "results"),
-        chainMessage("You can view a detailed output for any model or compare multiple. Just say **show model 1** or **compare models 1 and 2**."),
+        chainMessage("Model triggered.\n\nSummary of this run:\n- KPI: Sales\n- Modelling period: Jan 2022 – Dec 2024 · 156 weeks\n- Holdout: enabled\n- Variables selected: 9 mandatory drivers, with media, promotion, competition, and event controls\n- Candidate models: 64 across Batch 1–4\n\nThis should take around **10–12 minutes**. I’ll track candidate generation below and surface recommendations once the run completes."),
+        chainMessage("Results are in. I’ve ranked the qualified candidates and pre-selected the top two for comparison. Use the checkboxes if you want to compare up to three models side by side.", "generation"),
+        chainMessage("To inspect a single model in the detailed output view, say **show model 1**."),
       ],
     };
   }
@@ -605,8 +605,8 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
       return {
         nextState: { ...baseState, step: 6, waitingFor: "complete" },
         messages: [
-          chainMessage(`Here's the full output for Model ${modelNumber}.`, "summary"),
-          chainMessage(`**Model ${modelNumber} summary**\n\nR² is 81.4% — the model explains a strong share of sales variance. Incremental contribution is 18.1%, meaning roughly 18 pence in every pound of sales is driven by paid media activity. The remaining 81.9% is base — driven by brand equity, distribution, and structural factors.\n\n**Top contributors:**\n- TV (Traditional): 7.2% incremental share — highest single channel\n- Paid Search: 4.8% — strong efficiency relative to spend\n- Meta: 3.1% — solid volume driver, ROI slightly below average\n\nHoldout MAPE is 5.9% — model generalises well to unseen data. Health score 17/19.\n\nThis model is ready to sign off. Want me to run budget optimisation next, or move to the summary sheet?`),
+          chainMessage(`Opening the detailed output for Model ${modelNumber}.`, "results"),
+          chainMessage(`Model ${modelNumber} is a strong candidate: R² is high, MAPE is within threshold, and the contribution split is commercially plausible. Review the ROI and channel contribution table, then tell me if you want a summary or optimisation next.`),
         ],
       };
     }
