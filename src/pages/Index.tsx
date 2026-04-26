@@ -291,15 +291,22 @@ const Index = () => {
   };
 
   const handleCreateProject = (p: { name: string; brand: string; market: string; bu: string }) => {
-    setMessages((prev) => [
-      ...prev,
+    const createdState: SkillChainState = {
+      ...chain,
+      active: true,
+      step: 1,
+      waitingFor: "datacube",
+      projectName: p.name,
+      brand: p.brand,
+      market: p.market,
+      bu: p.bu,
+      currentBatch: chain.currentBatch || 1,
+    };
+    setChain(createdState);
+    appendStaggeredMessages(messages, [
       { id: `u${Date.now()}`, role: "user", text: `Create project ${p.name}` },
-      {
-        id: `a${Date.now() + 1}`,
-        role: "assistant",
-        text: `Created **${p.name}** (${p.bu} · ${p.market} · ${p.brand}). Let's start with **stage 1 — Data Upload**. Drop your datacube CSV below.`,
-        card: "upload",
-      },
+      chainMessage(`✅ Project **${p.name}** created — ${p.bu} · ${p.market} · ${p.brand}.\n\nNow I need your datacube. This is the input data file — a time-series spreadsheet with your KPI (sales or volume) and all media, price, promotion, and macro variables across your modelling period.\n\nDrop your file below. While you get it ready, feel free to ask me anything about what the datacube should look like.`),
+      chainMessage("", "upload"),
     ]);
   };
 
@@ -310,78 +317,40 @@ const Index = () => {
   };
 
   const handlePickProject = (projectId: string, projectName: string) => {
+    const pickedProject = projects.find((project) => project.id === projectId);
     setActiveProjectId(projectId);
-    // Simulate the AI handoff — in production this comes from chat-route.
+    setChain((current) => ({
+      ...current,
+      active: true,
+      step: 4,
+      waitingFor: "modelResults",
+      projectName,
+      brand: pickedProject?.brand ?? "Brand4",
+      market: pickedProject?.market ?? "UK",
+      currentBatch: 2,
+    }));
     setMessages((prev) => [
       ...prev,
       { id: `u${Date.now()}`, role: "user", text: `Open ${projectName}` },
       {
         id: `a${Date.now() + 1}`,
         role: "assistant",
-        text: `Switching you into **${projectName}**. You're at **stage 7 of 9 — Model Interpretation**, with 3 models run on Batch 2. Here's a snapshot — ready to resume, or want to start something fresh?`,
+        text: `Resuming **${projectName}** — ${pickedProject?.brand ?? "Brand4"} · ${pickedProject?.market ?? "UK"}.\n\nYou're at Step 4 — Model Interpretation, Batch 2 complete. Health: 14/19 | R²: 80.1%.\n\nWant a full snapshot or shall we jump straight to next steps?`,
         card: "project",
       },
     ]);
   };
 
   const handleClassificationConfirm = () => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `a${Date.now()}`,
-        role: "assistant",
-        text: "Great — classification locked. Let me pull up spend mapping...",
-      },
-    ]);
-    window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a${Date.now()}`,
-          role: "assistant",
-          text: "Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
-        card: "mapping",
-      },
-    ]);
-    }, 600);
-    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
+    handleSend("confirm");
   };
 
   const handleVariablePropertiesSave = () => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `a${Date.now()}`,
-        role: "assistant",
-        text: "Variable properties saved. I’m preparing the model configuration now...",
-      },
-    ]);
-    window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a${Date.now()}`,
-          role: "assistant",
-          text: "I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
-        card: "configuration",
-      },
-    ]);
-    }, 600);
-    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
+    handleSend("continue");
   };
 
-  const handleRunModel = (baseMessages = messages) => {
-    setModelRunPending(true);
-    setMessages([
-      ...baseMessages,
-      {
-        id: `a${Date.now()}`,
-        role: "assistant",
-        text: "Model run will be triggered shortly. Please confirm the below selections before I proceed.\n\n**Configuration summary**\n\n| Item | Selection |\n|---|---:|\n| KPI | Sales |\n| Model type | Unpooled |\n| Model form | Additive |\n| Model duration | 2022-01-08 – 2025-02-22 |\n| Holdout | On · 2024-07-08 – 2025-02-22 |\n| Variables selected | 9 of 40 |\n| Mandatory / optional | 7 / 2 |\n| Transformations | Adstock, Gamma, Direct |\n| Saturation | S-curve, Gamma, None |\n| Priors | Contribution and co-efficient ranges set |\n| QC gates | R², Adj-R², MAPE, Holdout MAPE, Durbin-Watson |\n\nCan I go ahead and trigger the model?",
-      },
-    ]);
-    setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
-    setThinking(false);
+  const handleRunModel = () => {
+    handleSend("go ahead");
   };
 
   const handleModeSelect = (mode: RunMode) => {
