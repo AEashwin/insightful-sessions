@@ -69,7 +69,6 @@ export function ModelGenerationCard() {
     return { qualified, disqualified, recommended };
   }, [visibleModels, complete]);
 
-  const selectableModels = [...partitions.qualified, ...partitions.recommended];
   const outputModels = allModels.filter((model) => selectedModels.includes(model.id));
 
   const toggleModel = (id: string) => {
@@ -158,7 +157,7 @@ function Metric({ label, value, tone }: { label: string; value: number; tone: "s
   );
 }
 
-function ModelTable({ models, empty, recommended = false }: { models: CandidateModel[]; empty: string; recommended?: boolean }) {
+function ModelTable({ models, empty, recommended = false, showStatus = false, selectedModels = [], onToggleModel }: { models: CandidateModel[]; empty: string; recommended?: boolean; showStatus?: boolean; selectedModels?: string[]; onToggleModel?: (id: string) => void }) {
   if (!models.length) {
     return <div className="rounded-lg border border-dashed border-border bg-background/70 p-5 text-center text-xs text-muted-foreground">{empty}</div>;
   }
@@ -168,29 +167,31 @@ function ModelTable({ models, empty, recommended = false }: { models: CandidateM
       <table className="w-full min-w-[680px] text-xs">
         <thead className="sticky top-0 bg-primary/10 text-primary">
           <tr>
+            {onToggleModel && <th className="px-3 py-2 text-left font-semibold">Select</th>}
             {recommended && <th className="px-3 py-2 text-left font-semibold">Rank</th>}
             <th className="px-3 py-2 text-left font-semibold">Model</th>
             <th className="px-3 py-2 text-left font-semibold">Batch</th>
             <th className="px-3 py-2 text-right font-semibold">R² / Rsq</th>
             <th className="px-3 py-2 text-right font-semibold">MAPE</th>
             <th className="px-3 py-2 text-right font-semibold">Holdout MAPE</th>
-            <th className="px-3 py-2 text-left font-semibold">Status</th>
+            {showStatus && <th className="px-3 py-2 text-left font-semibold">Status</th>}
           </tr>
         </thead>
         <tbody>
           {models.map((model, index) => (
             <tr key={model.id} className="border-t border-border odd:bg-card even:bg-sidebar-accent/35 hover:bg-primary/10">
+              {onToggleModel && <td className="px-3 py-2"><Checkbox checked={selectedModels.includes(model.id)} disabled={!selectedModels.includes(model.id) && selectedModels.length >= 3} onCheckedChange={() => onToggleModel(model.id)} /></td>}
               {recommended && <td className="px-3 py-2 font-semibold text-primary">#{index + 1}</td>}
               <td className="px-3 py-2 font-mono font-semibold text-foreground">{model.id}</td>
               <td className="px-3 py-2 text-muted-foreground">Batch {model.batch}</td>
               <td className="px-3 py-2 text-right font-semibold text-foreground">{model.rsq.toFixed(2)}</td>
               <td className="px-3 py-2 text-right text-foreground">{model.mape.toFixed(1)}%</td>
               <td className="px-3 py-2 text-right text-foreground">{model.holdoutMape.toFixed(1)}%</td>
-              <td className="px-3 py-2">
+              {showStatus && <td className="px-3 py-2">
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${model.status === "qualified" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                   {model.status === "qualified" ? <CheckCircle2 size={12} /> : <XCircle size={12} />} {recommended ? "Recommended" : model.reason}
                 </span>
-              </td>
+              </td>}
             </tr>
           ))}
         </tbody>
