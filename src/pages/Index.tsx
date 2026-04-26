@@ -319,7 +319,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","modeSelection","guidedContinue","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
@@ -394,10 +394,20 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Classification is locked. Next is **Spend Mapping**. Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
+        text: "Great — classification locked. Let me pull up spend mapping...",
+      },
+    ]);
+    window.setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a${Date.now()}`,
+          role: "assistant",
+          text: "Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
         card: "mapping",
       },
     ]);
+    }, 800);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
   };
 
@@ -407,10 +417,20 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Variable properties saved. I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
+        text: "Variable properties saved. I’m preparing the model configuration now...",
+      },
+    ]);
+    window.setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a${Date.now()}`,
+          role: "assistant",
+          text: "I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
         card: "configuration",
       },
     ]);
+    }, 800);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
   };
 
