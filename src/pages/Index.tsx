@@ -629,6 +629,7 @@ interface ChatStageProps {
   onModeSelect: (mode: RunMode) => void;
   onGuidedContinue: () => void;
   onGuidedPause: () => void;
+  onDataUploadProceed: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -655,6 +656,7 @@ function ChatStage({
   onModeSelect,
   onGuidedContinue,
   onGuidedPause,
+  onDataUploadProceed,
   theme,
   palette,
   onToggleTheme,
@@ -749,7 +751,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, onDataUploadProceed, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
