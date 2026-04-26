@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ChatMessageProps {
@@ -27,12 +26,12 @@ export function ChatMessage({ role, children }: ChatMessageProps) {
 
   return (
     <div className="flex gap-4 group">
-      <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-        <Sparkles size={14} className="text-primary" />
+      <div className="h-8 w-8 shrink-0 rounded-full bg-[#3D52A0] text-white text-[11px] font-semibold flex items-center justify-center">
+        DD
       </div>
       <div className="flex-1 pt-1 min-w-0">
         <p className="text-xs font-semibold text-primary mb-1">DD Assistant</p>
-        <div className="border-l-2 border-primary pl-3 text-sm text-foreground leading-[1.65] space-y-3">{children}</div>
+        <div className="text-sm text-foreground leading-[1.65] space-y-3 [&>p]:border-l-2 [&>p]:border-primary/30 [&>p]:pl-2.5">{children}</div>
       </div>
     </div>
   );

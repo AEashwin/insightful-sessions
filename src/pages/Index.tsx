@@ -764,7 +764,14 @@ function ChatStage({
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-sidebar-accent/35 via-background to-accent/25">
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto"
+            style={{
+              background:
+                "linear-gradient(to bottom, hsl(var(--primary) / 0.04) 0%, hsl(var(--background)) 40%, hsl(var(--background)) 100%)",
+            }}
+          >
             <div className={`${widthClass} mx-auto px-6 py-5 space-y-6 transition-[max-width] duration-200 ease-linear`}>
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
