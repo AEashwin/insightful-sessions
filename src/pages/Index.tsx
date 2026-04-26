@@ -544,6 +544,10 @@ function chainMessage(text: string, card?: CardKey): Message {
   return { id: `chain-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text, card };
 }
 
+function guidedMessage(stepNumber: number, stepName: string, summary: string): Message {
+  return { id: `guided-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text: `✅ Step ${stepNumber} complete — ${stepName}`, card: "guidedContinue", guidedStep: { stepNumber, stepName, summary } };
+}
+
 function getSkillChainReply(text: string, state: SkillChainState): { nextState: SkillChainState; messages: Message[] } | null {
   const input = text.trim().toLowerCase();
   const isStart = /\b(skill chain|mmm chain|autopilot|guided|datacube uploaded|data cube uploaded|start mmm)\b/i.test(text);
@@ -560,15 +564,19 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
     if (/\b(a|guided)\b/.test(input)) {
       return { nextState: { active: true, runMode: "guided", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Guided\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
     }
-    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. Before we begin, how would you like to run?\n\nOption A — Guided: I'll pause at each step and wait for your go-ahead before moving on.\n\nOption B — Autopilot: I'll run the full workflow automatically with live updates in chat. I'll only stop where I genuinely need your input (datacube upload, spend upload, classification approval, DRD questions, ROI parameters). You can say stop any time.\n\nWhich would you like — A or B?")] };
+    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. How would you like to run this session?", "modeSelection")] };
   }
 
   if (state.waitingFor === "datacube" && /\b(datacube uploaded|data cube uploaded|uploaded|continue)\b/.test(input)) {
-    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages: [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\n⏸ Autopilot paused — input needed: please review and approve the variable classification hierarchy. Say continue when ready, or stop to exit autopilot.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")] };
+    const messages = [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\nPlease review and approve the variable classification hierarchy.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")];
+    if (state.runMode === "guided") messages.push(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
+    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages };
   }
 
   if (state.waitingFor === "classification" && /\b(continue|approved|approve|yes|go|next)\b/.test(input)) {
-    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages: [chainMessage(`✅ Step 1 complete — Data Quality & Setup | Project: ${projectContext.project}\nMoving to Step 2 — DRD. Starting brand and market Q&A now.\n\n⏸ Autopilot paused — input needed: share any brand, market, competitor, seasonality, or business context I should include in the DRD.`)] };
+    const messages = [chainMessage(`Moving to Step 2 — DRD. Starting brand and market Q&A now.\n\nShare any brand, market, competitor, seasonality, or business context I should include in the DRD.`)];
+    if (state.runMode === "guided") messages.unshift(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
+    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages };
   }
 
   if (state.waitingFor === "drd" && input.length > 8) {
