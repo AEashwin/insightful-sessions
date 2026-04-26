@@ -579,7 +579,7 @@ function ChatStage({
 }: ChatStageProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const widthClass = collapsed ? "max-w-5xl" : "max-w-3xl";
+  const widthClass = collapsed ? "max-w-6xl" : "max-w-5xl";
   const [editingTitle, setEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(activeThreadTitle || "New chat");
 
@@ -690,17 +690,8 @@ function ChatStage({
 
 function McpAppFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-accent/45 p-1 shadow-[0_18px_45px_-30px_hsl(var(--primary)/0.65)]">
-      <div className="flex items-center justify-between gap-3 px-3 py-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.12)]" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">MCP App UI</span>
-          <span className="hidden h-3 w-px bg-border sm:block" />
-          <span className="truncate text-[11px] font-semibold text-foreground">Demand Drivers workspace</span>
-        </div>
-        <span className="rounded-full border border-success/25 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Editable</span>
-      </div>
-      <div className="overflow-hidden rounded-lg border border-border/80 bg-card">{children}</div>
+    <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/12 via-card to-accent/45 p-1 shadow-[0_18px_45px_-30px_hsl(var(--primary)/0.65)]">
+      <div className="overflow-hidden rounded-lg border border-border/80 bg-card ring-1 ring-primary/10">{children}</div>
     </div>
   );
 }
