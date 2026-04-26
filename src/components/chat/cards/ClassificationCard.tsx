@@ -181,8 +181,8 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-background px-3 py-2">
+    <div className="overflow-hidden rounded-lg border border-primary/20 bg-card shadow-sm">
+      <div className="border-b border-primary/15 bg-sidebar-accent/70 px-3 py-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Variable Classification</h3>
@@ -201,13 +201,13 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
         </div>
       </div>
 
-      <div className="grid gap-2 bg-muted/30 p-3 lg:grid-cols-3">
+      <div className="grid gap-2 bg-gradient-to-b from-sidebar-accent/45 to-card p-3 lg:grid-cols-3">
         {[buckets[0], buckets[1], buckets[2]].map((bucket) => (
           <BucketPanel key={bucket.id} bucket={bucket} count={counts.bucketCount(bucket)} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
         ))}
       </div>
 
-      <div className="grid gap-2 bg-muted/30 px-3 pb-2 lg:grid-cols-2">
+      <div className="grid gap-2 bg-card px-3 pb-2 lg:grid-cols-2">
         {[buckets[3], buckets[4]].map((bucket) => (
           <BucketPanel
             key={bucket.id}
@@ -224,7 +224,7 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
         ))}
       </div>
 
-      <div className="bg-muted/30 px-3 pb-3">
+      <div className="bg-card px-3 pb-3">
         <BucketPanel bucket={buckets[5]} count={counts.unresolved} selected={selected} onToggle={toggleVariable} onMove={moveVariables} compact />
       </div>
 
@@ -276,18 +276,18 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
 
 function BucketPanel({ bucket, count, selected, onToggle, onMove, onNewGroup, compact = false }: { bucket: Bucket; count: number; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; onNewGroup?: () => void; compact?: boolean }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+    <section className="overflow-hidden rounded-lg border border-primary/15 bg-background shadow-sm">
+      <div className="flex items-center justify-between border-b border-primary/10 bg-background px-3 py-2">
         <div className="flex items-center gap-2">
           <span className="text-xs" aria-hidden>{bucket.icon}</span>
-          <p className="text-[11px] font-semibold text-foreground">{bucket.title}</p>
+          <p className="text-xs font-semibold text-foreground">{bucket.title}</p>
         </div>
         <div className="flex items-center gap-2">
-          {onNewGroup && <button type="button" onClick={onNewGroup} className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-background px-2 text-[10px] font-medium text-foreground hover:bg-muted"><Plus size={10} /> New group</button>}
-          <Badge variant="outline" className="h-5 bg-muted/40 text-[10px]">{count}</Badge>
+          {onNewGroup && <button type="button" onClick={onNewGroup} className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-foreground hover:bg-muted"><Plus size={11} /> New group</button>}
+          <Badge variant="outline" className="h-6 bg-primary/5 px-2 text-[11px]">{count}</Badge>
         </div>
       </div>
-      <div className={`space-y-1 p-2 ${compact ? "min-h-[70px]" : "min-h-[324px]"}`}>
+      <div className={`space-y-1.5 p-2.5 ${compact ? "min-h-[86px]" : "min-h-[324px]"}`}>
         {bucket.groups.map((group) => (
           <GroupBlock key={group.id} bucketId={bucket.id} group={group} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} depth={0} />
         ))}
@@ -302,7 +302,7 @@ function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact, dept
 
   return (
     <div
-      className="rounded-md border border-transparent p-1 transition-colors hover:border-primary/30 hover:bg-muted/30"
+      className="rounded-md border border-transparent p-1.5 transition-colors hover:border-primary/30 hover:bg-primary/5"
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
@@ -311,8 +311,8 @@ function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact, dept
       }}
     >
       {group.name && (
-        <button type="button" onClick={() => onMove(bucketId, group.id)} className="mb-1 flex w-full items-center gap-1 rounded-sm py-0.5 text-left text-[11px] font-semibold text-foreground hover:text-primary" style={{ paddingLeft: `${depth * 10}px` }}>
-          <ChevronDown size={10} className="text-muted-foreground" /> {group.name} <span className="ml-auto text-muted-foreground">{count}</span>
+        <button type="button" onClick={() => onMove(bucketId, group.id)} className="mb-1 flex w-full items-center gap-1 rounded-sm py-0.5 text-left text-xs font-semibold text-foreground hover:text-primary" style={{ paddingLeft: `${depth * 10}px` }}>
+          <ChevronDown size={11} className="text-muted-foreground" /> {group.name} <span className="ml-auto text-muted-foreground">{count}</span>
         </button>
       )}
       {hasChildren && (
@@ -323,7 +323,7 @@ function GroupBlock({ bucketId, group, selected, onToggle, onMove, compact, dept
         </div>
       )}
       {!!group.variables?.length && (
-        <div className="flex flex-wrap gap-1.5" style={{ paddingLeft: group.name ? `${(depth + 1) * 10}px` : undefined }}>
+        <div className="flex flex-wrap gap-2" style={{ paddingLeft: group.name ? `${(depth + 1) * 10}px` : undefined }}>
           {group.variables.map((variable) => (
             <VariableChip key={variable} name={variable} selected={selected.includes(variable)} onToggle={onToggle} compact={compact} selectedSet={selected} />
           ))}
@@ -340,11 +340,11 @@ function VariableChip({ name, selected, onToggle, compact, selectedSet }: { name
       draggable
       onClick={() => onToggle(name)}
       onDragStart={(event) => event.dataTransfer.setData("text/plain", (selectedSet.length && selected ? selectedSet : [name]).join("||"))}
-      className={`inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 font-mono text-[9px] transition-colors ${
-        selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-muted"
-      } ${compact ? "max-w-[132px]" : "max-w-[150px]"}`}
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1.5 font-mono text-[11px] leading-none shadow-sm transition-colors ${
+        selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-primary/5"
+      } ${compact ? "max-w-[190px]" : "max-w-[220px]"}`}
     >
-      <GripVertical size={8} className={selected ? "text-primary-foreground/70" : "text-muted-foreground"} />
+      <GripVertical size={10} className={selected ? "text-primary-foreground/70" : "text-muted-foreground"} />
       <span className="truncate">{name}</span>
     </button>
   );
