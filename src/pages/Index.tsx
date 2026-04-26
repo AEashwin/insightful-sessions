@@ -146,6 +146,8 @@ const renderCard = (
     case "mapping": return <SpendMappingCard />;
     case "configuration": return <ModelConfigurationCard onRunModel={ctx.onRunModel} />;
     case "generation": return <ModelGenerationCard />;
+    case "modeSelection": return <ModeSelectionCard onSelect={ctx.onModeSelect} />;
+    case "guidedContinue": return <GuidedContinueCard stepNumber={ctx.guidedStep?.stepNumber} stepName={ctx.guidedStep?.stepName} summary={ctx.guidedStep?.summary} onContinue={ctx.onGuidedContinue} onPause={ctx.onGuidedPause} />;
     case "transformations": return <ModelTransformationsCard />;
     case "results": return <ModelResultsCard />;
     case "summary": return <ModelSummaryCard />;
