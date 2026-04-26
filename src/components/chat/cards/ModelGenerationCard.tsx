@@ -37,10 +37,18 @@ const allModels: CandidateModel[] = Array.from({ length: 64 }, (_, index) => {
 });
 
 export function ModelGenerationCard() {
-  const [processed, setProcessed] = useState(5);
-  const [activeTab, setActiveTab] = useState("qualified");
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [showOutput, setShowOutput] = useState(false);
+  const recommendedSeed = useMemo(
+    () => [...allModels]
+      .filter((model) => model.status === "qualified")
+      .sort((a, b) => b.rsq - a.rsq || a.holdoutMape - b.holdoutMape || a.mape - b.mape)
+      .slice(0, 2)
+      .map((model) => model.id),
+    [],
+  );
+  const [processed, setProcessed] = useState(allModels.length);
+  const [activeTab, setActiveTab] = useState("recommended");
+  const [selectedModels, setSelectedModels] = useState<string[]>(recommendedSeed);
+  const [showOutput, setShowOutput] = useState(true);
   const visibleModels = allModels.slice(0, processed);
   const progress = Math.round((processed / allModels.length) * 100);
   const complete = processed >= allModels.length;
