@@ -11,7 +11,11 @@ const detected = [
   { name: "Promo_Depth", type: "Numeric", coverage: "100%" },
 ];
 
-export function DataUploadCard() {
+interface DataUploadCardProps {
+  onProceed?: () => void;
+}
+
+export function DataUploadCard({ onProceed }: DataUploadCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
@@ -67,7 +71,7 @@ export function DataUploadCard() {
 
       <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center justify-between">
         <span className="text-[11px] text-muted-foreground">No issues found</span>
-        <Button size="sm" className="h-7 text-[11px]">Proceed to classification</Button>
+        <Button size="sm" className="h-7 text-[11px]" onClick={onProceed}>Proceed to classification</Button>
       </div>
     </div>
   );

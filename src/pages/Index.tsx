@@ -134,6 +134,7 @@ const renderCard = (
     onModeSelect?: (mode: RunMode) => void;
     onGuidedContinue?: () => void;
     onGuidedPause?: () => void;
+    onDataUploadProceed?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
     guidedStep?: Message["guidedStep"];
   },
@@ -142,7 +143,7 @@ const renderCard = (
     case "project": return <ProjectSummaryCard />;
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
-    case "upload": return <DataUploadCard />;
+    case "upload": return <DataUploadCard onProceed={ctx.onDataUploadProceed} />;
     case "groups": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
     case "properties": return <VariablePropertiesCard onSave={ctx.onVariablePropertiesSave} />;
     case "mapping": return <SpendMappingCard />;
@@ -365,6 +366,10 @@ const Index = () => {
     handleSend("pause");
   };
 
+  const handleDataUploadProceed = () => {
+    handleSend("file uploaded");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -407,6 +412,7 @@ const Index = () => {
           onModeSelect={handleModeSelect}
           onGuidedContinue={handleGuidedContinue}
           onGuidedPause={handleGuidedPause}
+          onDataUploadProceed={handleDataUploadProceed}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -547,6 +553,16 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
   }
 
   if (baseState.waitingFor === "classification") {
+    if (/\b(confirm|confirmed|done|looks good|proceed|approve)\b/.test(input)) {
+      return {
+        nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" },
+        messages: [
+          chainMessage("Great — classification locked. Let me pull up spend mapping..."),
+          chainMessage("To calculate response curves and ROIs, each media metric needs a matching spend variable. I’ll map what I can automatically and flag anything that needs your review.", "mapping"),
+          chainMessage("I’ve auto-mapped spends to most variables. A few need review before we lock this step. Check the mapping table, then say **confirm** when it looks good."),
+        ],
+      };
+    }
     if (baseState.runMode === "guided" && /\b(yes|ready|go|next|continue)\b/.test(input)) {
       return { nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" }, messages: classificationMessages(baseState.runMode) };
     }
@@ -623,6 +639,7 @@ interface ChatStageProps {
   onModeSelect: (mode: RunMode) => void;
   onGuidedContinue: () => void;
   onGuidedPause: () => void;
+  onDataUploadProceed: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -649,6 +666,7 @@ function ChatStage({
   onModeSelect,
   onGuidedContinue,
   onGuidedPause,
+  onDataUploadProceed,
   theme,
   palette,
   onToggleTheme,
@@ -743,7 +761,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, onDataUploadProceed, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
