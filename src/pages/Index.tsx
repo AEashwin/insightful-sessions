@@ -134,6 +134,7 @@ const renderCard = (
     onModeSelect?: (mode: RunMode) => void;
     onGuidedContinue?: () => void;
     onGuidedPause?: () => void;
+    onDataUploadProceed?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
     guidedStep?: Message["guidedStep"];
   },
@@ -142,7 +143,7 @@ const renderCard = (
     case "project": return <ProjectSummaryCard />;
     case "selector": return <ProjectSelectorCard onPick={ctx.onPickProject} onNewProject={ctx.onNewProject} />;
     case "newProject": return <NewProjectCard onCreate={ctx.onCreateProject} initial={ctx.prefill} />;
-    case "upload": return <DataUploadCard />;
+    case "upload": return <DataUploadCard onProceed={ctx.onDataUploadProceed} />;
     case "groups": return <ClassificationCard onConfirm={ctx.onClassificationConfirm} />;
     case "properties": return <VariablePropertiesCard onSave={ctx.onVariablePropertiesSave} />;
     case "mapping": return <SpendMappingCard />;
@@ -365,6 +366,10 @@ const Index = () => {
     handleSend("pause");
   };
 
+  const handleDataUploadProceed = () => {
+    handleSend("file uploaded");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -407,6 +412,7 @@ const Index = () => {
           onModeSelect={handleModeSelect}
           onGuidedContinue={handleGuidedContinue}
           onGuidedPause={handleGuidedPause}
+          onDataUploadProceed={handleDataUploadProceed}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
