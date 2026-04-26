@@ -86,17 +86,17 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="flex flex-col gap-2 border-b border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+    <div className="overflow-hidden rounded-lg bg-card">
+      <div className="flex flex-col gap-2 border-b border-primary/20 bg-gradient-to-r from-primary/12 via-sidebar-accent to-accent px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Model Configuration</h3>
           <p className="text-[11px] text-muted-foreground">System-selected variables, model-level settings, transformations, priors, and QC gates</p>
         </div>
       </div>
 
-      <div className="space-y-3 bg-muted/20 p-3">
+      <div className="space-y-3 bg-gradient-to-b from-sidebar-accent/45 to-card p-3">
         <section className="grid gap-2 xl:grid-cols-[1fr_1.15fr]">
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="rounded-lg border border-primary/20 bg-background/90 p-3 shadow-sm">
             <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-foreground"><SlidersHorizontal size={13} className="text-primary" /> Model parameters</div>
             <div className="grid gap-2 sm:grid-cols-3">
               <Field label="KPI"><Select defaultValue="sales"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="sales">Sales</SelectItem><SelectItem value="volume">Volume</SelectItem><SelectItem value="revenue">Revenue</SelectItem></SelectContent></Select></Field>
@@ -104,17 +104,17 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
               <Field label="Model form"><Select defaultValue="additive"><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="additive">Additive</SelectItem><SelectItem value="multiplicative">Multiplicative</SelectItem><SelectItem value="log-linear">Log-linear</SelectItem></SelectContent></Select></Field>
             </div>
           </div>
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="rounded-lg border border-primary/20 bg-background/90 p-3 shadow-sm">
             <div className="mb-2 flex items-center justify-between gap-2 text-[11px] font-semibold text-foreground"><span className="inline-flex items-center gap-2"><CalendarDays size={13} className="text-primary" /> Duration & holdout</span><label className="flex items-center gap-2 text-[10px] text-muted-foreground"><Switch checked={holdoutEnabled} onCheckedChange={setHoldoutEnabled} /> Holdout on</label></div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Model duration</p><div className="grid grid-cols-2 gap-2"><Field label="Start date"><Input type="text" value={duration.start} onChange={(event) => setDuration({ ...duration, start: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field><Field label="End date"><Input type="text" value={duration.end} onChange={(event) => setDuration({ ...duration, end: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field></div></div>
-              <div className="rounded-md bg-muted/25 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Holdout period</p><div className="grid grid-cols-2 gap-2 opacity-100 data-[disabled=true]:opacity-45" data-disabled={!holdoutEnabled}><Field label="Start date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutStart} onChange={(event) => setDuration({ ...duration, holdoutStart: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field><Field label="End date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutEnd} onChange={(event) => setDuration({ ...duration, holdoutEnd: event.target.value })} className="h-9 w-full min-w-0 text-[12px]" /></Field></div></div>
+              <div className="rounded-md border border-border/70 bg-sidebar-accent/70 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Model duration</p><div className="grid grid-cols-2 gap-2"><Field label="Start date"><Input type="text" value={duration.start} onChange={(event) => setDuration({ ...duration, start: event.target.value })} className="h-9 w-full min-w-0 bg-card text-[12px]" /></Field><Field label="End date"><Input type="text" value={duration.end} onChange={(event) => setDuration({ ...duration, end: event.target.value })} className="h-9 w-full min-w-0 bg-card text-[12px]" /></Field></div></div>
+              <div className="rounded-md border border-border/70 bg-accent/70 p-2"><p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Holdout period</p><div className="grid grid-cols-2 gap-2 opacity-100 data-[disabled=true]:opacity-45" data-disabled={!holdoutEnabled}><Field label="Start date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutStart} onChange={(event) => setDuration({ ...duration, holdoutStart: event.target.value })} className="h-9 w-full min-w-0 bg-card text-[12px]" /></Field><Field label="End date"><Input disabled={!holdoutEnabled} type="text" value={duration.holdoutEnd} onChange={(event) => setDuration({ ...duration, holdoutEnd: event.target.value })} className="h-9 w-full min-w-0 bg-card text-[12px]" /></Field></div></div>
             </div>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="flex flex-col gap-2 border-b border-border bg-background px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <section className="overflow-hidden rounded-lg border border-primary/20 bg-background/90 shadow-sm">
+          <div className="flex flex-col gap-2 border-b border-primary/15 bg-sidebar-accent/80 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold text-foreground">Selected modelling variables</p>
               <p className="text-[10px] text-muted-foreground">{selectedCount} of 40 classified variables selected · add remaining variables and edit role, transformations, saturation, and priors inline</p>
@@ -129,7 +129,7 @@ export function ModelConfigurationCard({ onRunModel }: { onRunModel?: () => void
           </div>
           <div className="max-h-[300px] overflow-auto">
             <table className="w-full text-[11px]">
-              <thead className="sticky top-0 bg-muted/60 text-[10px] uppercase text-muted-foreground">
+              <thead className="sticky top-0 bg-primary/10 text-[10px] uppercase text-primary">
                 <tr><th className="px-3 py-2 text-left font-semibold">Variable</th><th className="px-3 py-2 text-left font-semibold">Group</th><th className="px-3 py-2 text-left font-semibold">Role</th>{detail === "transformations" && <><th className="px-3 py-2 text-left font-semibold">Transform</th><th className="px-3 py-2 text-left font-semibold">Decay min / max / inc</th><th className="px-3 py-2 text-left font-semibold">Build min / max / inc</th><th className="px-3 py-2 text-left font-semibold">Period min / max / inc</th></>}{detail === "saturation" && <th className="px-3 py-2 text-left font-semibold">Saturation</th>}{detail === "priors" && <><th className="px-3 py-2 text-left font-semibold">Contribution / co-efficient</th><th className="px-3 py-2 text-left font-semibold">Prior min %</th><th className="px-3 py-2 text-left font-semibold">Prior max %</th></>}</tr>
               </thead>
               <tbody>
