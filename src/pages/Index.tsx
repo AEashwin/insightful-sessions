@@ -624,6 +624,9 @@ interface ChatStageProps {
   onClassificationConfirm: () => void;
   onVariablePropertiesSave: () => void;
   onRunModel: () => void;
+  onModeSelect: (mode: RunMode) => void;
+  onGuidedContinue: () => void;
+  onGuidedPause: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -647,6 +650,9 @@ function ChatStage({
   onClassificationConfirm,
   onVariablePropertiesSave,
   onRunModel,
+  onModeSelect,
+  onGuidedContinue,
+  onGuidedPause,
   theme,
   palette,
   onToggleTheme,
