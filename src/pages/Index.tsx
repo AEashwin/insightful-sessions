@@ -12,6 +12,8 @@ import { VariablePropertiesCard } from "@/components/chat/cards/VariableProperti
 import { SpendMappingCard } from "@/components/chat/cards/SpendMappingCard";
 import { ModelConfigurationCard } from "@/components/chat/cards/ModelConfigurationCard";
 import { ModelGenerationCard } from "@/components/chat/cards/ModelGenerationCard";
+import { ModeSelectionCard } from "@/components/chat/cards/ModeSelectionCard";
+import { GuidedContinueCard } from "@/components/chat/cards/GuidedContinueCard";
 import { ModelTransformationsCard } from "@/components/chat/cards/ModelTransformationsCard";
 import { ModelResultsCard } from "@/components/chat/cards/ModelResultsCard";
 import { ModelSummaryCard } from "@/components/chat/cards/ModelSummaryCard";
@@ -44,6 +46,8 @@ type CardKey =
   | "mapping"
   | "configuration"
   | "generation"
+  | "modeSelection"
+  | "guidedContinue"
   | "transformations"
   | "results"
   | "summary"
@@ -58,6 +62,7 @@ interface Message {
   text?: string;
   card?: CardKey;
   prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
+  guidedStep?: { stepNumber: number; stepName: string; summary: string };
 }
 
 type ThemeMode = "light" | "dark";
@@ -106,25 +111,16 @@ const threads: ChatThread[] = [
 ];
 
 const seededMessages: Message[] = [
-  { id: "m1", role: "user", text: "Let's start a new MMM session." },
   {
-    id: "m2",
+    id: "m1",
     role: "assistant",
-    text: "Welcome to Demand Drivers. Pick a project to resume or create a new one — you can filter by market.",
-    card: "selector",
+    text: "Welcome back, John. I'm your MMM assistant on Demand Drivers.\n\nWould you like to resume an existing project or start a new one?"
   },
-  { id: "m3", role: "user", text: "Resume Demo_Brand4_2025." },
+  { id: "m2", role: "user", text: "Resume Demo_Brand4_2025." },
   {
-    id: "m4",
+    id: "m3",
     role: "assistant",
-    text: "Loaded **Demo_Brand4_2025**. You're at stage 7 of 9 (Model Interpretation). Snapshot below:",
-    card: "project",
-  },
-  {
-    id: "m5",
-    role: "assistant",
-    text: "Here's the full workflow tracker — ask for any step at any time.",
-    card: "workflow",
+    text: "Resuming **Demo_Brand4_2025** — Brand4 · UK.\n\nYou're at Step 4 of 7 — Model Interpretation, Batch 2 complete. Health score is 14/19. R² is 80.1%.\n\nShall I show a full snapshot or jump straight to next steps?"
   },
 ];
 
@@ -137,7 +133,11 @@ const renderCard = (
     onClassificationConfirm?: () => void;
     onVariablePropertiesSave?: () => void;
     onRunModel?: () => void;
+    onModeSelect?: (mode: RunMode) => void;
+    onGuidedContinue?: () => void;
+    onGuidedPause?: () => void;
     prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
+    guidedStep?: Message["guidedStep"];
   },
 ) => {
   switch (key) {
@@ -150,6 +150,8 @@ const renderCard = (
     case "mapping": return <SpendMappingCard />;
     case "configuration": return <ModelConfigurationCard onRunModel={ctx.onRunModel} />;
     case "generation": return <ModelGenerationCard />;
+    case "modeSelection": return <ModeSelectionCard onSelect={ctx.onModeSelect} />;
+    case "guidedContinue": return <GuidedContinueCard stepNumber={ctx.guidedStep?.stepNumber} stepName={ctx.guidedStep?.stepName} summary={ctx.guidedStep?.summary} onContinue={ctx.onGuidedContinue} onPause={ctx.onGuidedPause} />;
     case "transformations": return <ModelTransformationsCard />;
     case "results": return <ModelResultsCard />;
     case "summary": return <ModelSummaryCard />;
@@ -213,6 +215,24 @@ const Index = () => {
     const history = [...messages, userMsg];
     setMessages(history);
 
+    if (/\b(show me|show snapshot|full snapshot|snapshot)\b/i.test(text)) {
+      setMessages([
+        ...history,
+        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the current project snapshot.", card: "project" },
+      ]);
+      setThinking(false);
+      return;
+    }
+
+    if (/\b(next steps|jump.*next|where i left off)\b/i.test(text)) {
+      setMessages([
+        ...history,
+        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the workflow position and the next step I recommend.", card: "workflow" },
+      ]);
+      setThinking(false);
+      return;
+    }
+
     if (modelRunPending && /\b(ok|okay|yes|approve|approved|confirm|confirmed|go ahead|proceed)\b/i.test(text)) {
       setModelRunPending(false);
       setMessages([
@@ -237,10 +257,20 @@ const Index = () => {
         {
           id: `a${Date.now() + 1}`,
           role: "assistant",
-          text: "Spend mapping confirmed. After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
-          card: "properties",
+          text: "Spend mapping confirmed. I’m checking the selected variables before opening properties...",
         },
       ]);
+      window.setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a${Date.now()}`,
+            role: "assistant",
+            text: "After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
+            card: "properties",
+          },
+        ]);
+      }, 600);
       setChain((current) => current.active ? { ...current, step: Math.max(current.step, 3), waitingFor: "drd" } : current);
       setThinking(false);
       return;
@@ -317,7 +347,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","modeSelection","guidedContinue","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
@@ -392,10 +422,20 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Classification is locked. Next is **Spend Mapping**. Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
+        text: "Great — classification locked. Let me pull up spend mapping...",
+      },
+    ]);
+    window.setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a${Date.now()}`,
+          role: "assistant",
+          text: "Coverage is 14 mapped columns (74%), 3 missing spend inputs in Promotions, and 2 approved spend-only variables. AI checks show weekly periodicity and GBP currency are aligned; Meta split needs approval after upload.",
         card: "mapping",
       },
     ]);
+    }, 600);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
   };
 
@@ -405,10 +445,20 @@ const Index = () => {
       {
         id: `a${Date.now()}`,
         role: "assistant",
-        text: "Variable properties saved. I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
+        text: "Variable properties saved. I’m preparing the model configuration now...",
+      },
+    ]);
+    window.setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a${Date.now()}`,
+          role: "assistant",
+          text: "I selected **19 of 40 classified variables** for modelling based on classification, spend readiness, missingness, and business relevance. The model configuration is ready below — transformations, priors, and QC are pre-filled but hidden unless you choose View.",
         card: "configuration",
       },
     ]);
+    }, 600);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
   };
 
@@ -424,6 +474,18 @@ const Index = () => {
     ]);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
     setThinking(false);
+  };
+
+  const handleModeSelect = (mode: RunMode) => {
+    handleSend(mode === "autopilot" ? "Autopilot" : "Guided");
+  };
+
+  const handleGuidedContinue = () => {
+    handleSend("continue");
+  };
+
+  const handleGuidedPause = () => {
+    handleSend("pause");
   };
 
   if (authLoading) {
@@ -465,6 +527,9 @@ const Index = () => {
           onClassificationConfirm={handleClassificationConfirm}
           onVariablePropertiesSave={handleVariablePropertiesSave}
           onRunModel={() => handleRunModel()}
+          onModeSelect={handleModeSelect}
+          onGuidedContinue={handleGuidedContinue}
+          onGuidedPause={handleGuidedPause}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -494,6 +559,10 @@ function chainMessage(text: string, card?: CardKey): Message {
   return { id: `chain-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text, card };
 }
 
+function guidedMessage(stepNumber: number, stepName: string, summary: string): Message {
+  return { id: `guided-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text: `✅ Step ${stepNumber} complete — ${stepName}`, card: "guidedContinue", guidedStep: { stepNumber, stepName, summary } };
+}
+
 function getSkillChainReply(text: string, state: SkillChainState): { nextState: SkillChainState; messages: Message[] } | null {
   const input = text.trim().toLowerCase();
   const isStart = /\b(skill chain|mmm chain|autopilot|guided|datacube uploaded|data cube uploaded|start mmm)\b/i.test(text);
@@ -510,15 +579,19 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
     if (/\b(a|guided)\b/.test(input)) {
       return { nextState: { active: true, runMode: "guided", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Guided\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
     }
-    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. Before we begin, how would you like to run?\n\nOption A — Guided: I'll pause at each step and wait for your go-ahead before moving on.\n\nOption B — Autopilot: I'll run the full workflow automatically with live updates in chat. I'll only stop where I genuinely need your input (datacube upload, spend upload, classification approval, DRD questions, ROI parameters). You can say stop any time.\n\nWhich would you like — A or B?")] };
+    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. How would you like to run this session?", "modeSelection")] };
   }
 
   if (state.waitingFor === "datacube" && /\b(datacube uploaded|data cube uploaded|uploaded|continue)\b/.test(input)) {
-    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages: [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\n⏸ Autopilot paused — input needed: please review and approve the variable classification hierarchy. Say continue when ready, or stop to exit autopilot.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")] };
+    const messages = [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\nPlease review and approve the variable classification hierarchy.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")];
+    if (state.runMode === "guided") messages.push(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
+    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages };
   }
 
   if (state.waitingFor === "classification" && /\b(continue|approved|approve|yes|go|next)\b/.test(input)) {
-    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages: [chainMessage(`✅ Step 1 complete — Data Quality & Setup | Project: ${projectContext.project}\nMoving to Step 2 — DRD. Starting brand and market Q&A now.\n\n⏸ Autopilot paused — input needed: share any brand, market, competitor, seasonality, or business context I should include in the DRD.`)] };
+    const messages = [chainMessage(`Moving to Step 2 — DRD. Starting brand and market Q&A now.\n\nShare any brand, market, competitor, seasonality, or business context I should include in the DRD.`)];
+    if (state.runMode === "guided") messages.unshift(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
+    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages };
   }
 
   if (state.waitingFor === "drd" && input.length > 8) {
@@ -551,6 +624,9 @@ interface ChatStageProps {
   onClassificationConfirm: () => void;
   onVariablePropertiesSave: () => void;
   onRunModel: () => void;
+  onModeSelect: (mode: RunMode) => void;
+  onGuidedContinue: () => void;
+  onGuidedPause: () => void;
   theme: ThemeMode;
   palette: ColorPalette;
   onToggleTheme: () => void;
@@ -574,6 +650,9 @@ function ChatStage({
   onClassificationConfirm,
   onVariablePropertiesSave,
   onRunModel,
+  onModeSelect,
+  onGuidedContinue,
+  onGuidedPause,
   theme,
   palette,
   onToggleTheme,
@@ -668,7 +747,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, prefill: m.prefill })}</McpAppFrame>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
