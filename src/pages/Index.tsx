@@ -436,54 +436,173 @@ function chainMessage(text: string, card?: CardKey): Message {
   return { id: `chain-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text, card };
 }
 
-function guidedMessage(stepNumber: number, stepName: string, summary: string): Message {
-  return { id: `guided-${Date.now()}-${Math.random().toString(16).slice(2)}`, role: "assistant", text: `✅ Step ${stepNumber} complete — ${stepName}`, card: "guidedContinue", guidedStep: { stepNumber, stepName, summary } };
+function isDatacubeQuestion(input: string) {
+  return /\?/.test(input) || /^(what|how|why|do|can|should|is|which)\b/.test(input.trim());
+}
+
+function datacubeAnswer(input: string) {
+  if (/format|csv|excel/.test(input)) return "CSV or Excel. Columns are your variables, rows are time periods — weekly is standard.";
+  if (/years|history|long|period/.test(input)) return "Minimum 2 years of weekly data. 3+ years gives the model more to work with.";
+  if (/variables|columns|include/.test(input)) return "Your KPI (sales or volume), all media spend and volume metrics (GRPs, impressions, clicks), price, promotions, distribution, and any macro variables like seasonality or economic indicators.";
+  if (/what.*datacube|datacube/.test(input)) return "It's your input data file — a time-series table where each row is a week and each column is a variable you want the model to consider.";
+  return "For the datacube, send a weekly CSV or Excel time-series: one date column, one KPI column, and columns for media, price, promotions, distribution, and macro factors. Keep naming consistent and avoid merged cells.";
+}
+
+function stepLabel(state: SkillChainState) {
+  const labels: Record<number, string> = {
+    0: "Project setup",
+    1: "Datacube upload and validation",
+    3: "Classification and spend mapping",
+    4: "Model configuration",
+    5: "Model results",
+    6: "Model output review",
+  };
+  return labels[state.step] ?? "MMM workflow";
 }
 
 function getSkillChainReply(text: string, state: SkillChainState): { nextState: SkillChainState; messages: Message[] } | null {
   const input = text.trim().toLowerCase();
-  const isStart = /\b(skill chain|mmm chain|autopilot|guided|datacube uploaded|data cube uploaded|start mmm)\b/i.test(text);
-  if (!state.active && !isStart) return null;
+  const baseState: SkillChainState = { ...state, currentBatch: state.currentBatch || 1 };
+
+  if (/\b(start over|restart)\b/.test(input)) {
+    return { nextState: { active: false, step: 0, currentBatch: 1 }, messages: [...seededMessages] };
+  }
 
   if (/\b(stop|pause)\b/.test(input)) {
-    return { nextState: { ...state, active: true }, messages: [chainMessage(`⏸ Chain paused — Project: ${projectContext.project} | Step ${state.step} | Batch ${state.currentBatch}. Say continue, autopilot, guided, or switch project when ready.`)] };
+    return {
+      nextState: { ...baseState, active: true },
+      messages: [chainMessage(`⏸ Paused. You're at **${stepLabel(baseState)}**${baseState.runMode ? ` in ${baseState.runMode} mode` : ""}${baseState.projectName ? ` for **${baseState.projectName}**` : ""}. Say continue when you're ready.`)],
+    };
   }
 
-  if (!state.active || state.waitingFor === "mode") {
-    if (/\b(b|autopilot)\b/.test(input)) {
-      return { nextState: { active: true, runMode: "autopilot", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Autopilot\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
+  if (/switch to guided/.test(input)) {
+    return { nextState: { ...baseState, active: true, runMode: "guided" }, messages: [chainMessage("Switched to **Guided** mode. I'll pause after each step and wait for your go-ahead.")] };
+  }
+
+  if (/switch to autopilot/.test(input)) {
+    return { nextState: { ...baseState, active: true, runMode: "autopilot" }, messages: [chainMessage("Switched to **Autopilot** mode. I'll keep the workflow moving and only stop when I need your input.")] };
+  }
+
+  if (/\bwhere are we\b/.test(input)) {
+    return {
+      nextState: baseState,
+      messages: [chainMessage(`You're at **${stepLabel(baseState)}**. Mode: **${baseState.runMode ?? "not selected"}**. Project: **${baseState.projectName ?? projectContext.project}**. Current batch: **${baseState.currentBatch}**.`)],
+    };
+  }
+
+  if (!baseState.waitingFor) {
+    if (/\b(continue|resume|previous)\b/.test(input)) {
+      return {
+        nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "projectPick" },
+        messages: [chainMessage("Sure — here are your existing projects. You can filter by market or brand and pick one to resume.", "selector")],
+      };
     }
-    if (/\b(a|guided)\b/.test(input)) {
-      return { nextState: { active: true, runMode: "guided", step: 1, currentBatch: 1, waitingFor: "datacube" }, messages: [chainMessage(`✅ Project ready — ${projectContext.project}\nClient: ${projectContext.tenant} | Brand: ${projectContext.subBrand} | Market: ${projectContext.country} | Mode: DD MCP | Run: Guided\n\nNext up is Step 1 — Data Quality & Setup. ⏸ Please upload your datacube to continue — I can't do this on your behalf.`, "workflow")] };
+
+    if (/\b(new|start|start new|new project|new session|skill chain|mmm session|autopilot|guided)\b/.test(input)) {
+      return {
+        nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" },
+        messages: [chainMessage("Before we begin, how would you like to run this session?\n\n**Guided** — I pause after every step and wait for your go-ahead. Best if you want full control or are new to the workflow.\n\n**Autopilot** — I run the full workflow end to end with live updates in chat. I only stop when I genuinely need your input — uploads, approvals, DRD context. You can say stop any time.\n\nWhich would you prefer?")],
+      };
     }
-    return { nextState: { active: true, step: 0, currentBatch: 1, waitingFor: "mode" }, messages: [chainMessage("Welcome to the MMM Skill Chain. How would you like to run this session?", "modeSelection")] };
   }
 
-  if (state.waitingFor === "datacube" && /\b(datacube uploaded|data cube uploaded|uploaded|continue)\b/.test(input)) {
-    const messages = [chainMessage("Datacube received. Running Step 1 automatically: QC passed, columns detected, classification lock prepared, spend periodicity checked, holidays matched.\n\nPlease review and approve the variable classification hierarchy.", "upload"), chainMessage("I've rendered the classification widget with the proposed Base, Incremental, Media, Traditional, Digital, and variable-level hierarchy for approval.", "classification")];
-    if (state.runMode === "guided") messages.push(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
-    return { nextState: { ...state, step: 1, waitingFor: "classification" }, messages };
+  if (baseState.waitingFor === "projectPick") return null;
+
+  if (baseState.waitingFor === "mode") {
+    if (/\b(guided|a)\b/.test(input)) {
+      return {
+        nextState: { ...baseState, active: true, runMode: "guided", step: 0, waitingFor: "projectExplain" },
+        messages: [
+          chainMessage("Great — Guided mode it is. I'll check in with you at every step.\n\nFirst things first — we need to set up a **project**.\n\nIn Demand Drivers, a project is a container for one brand in one market. It holds your datacube, variable classifications, model configurations, and all outputs. Everything is tied to a project so you can resume, compare, and share work cleanly.\n\nLet's create one now. You can fill in the form below, or just tell me the business unit, country, and a name for the project and I'll fill it in for you."),
+          chainMessage("", "newProject"),
+        ],
+      };
+    }
+    if (/\b(autopilot|b)\b/.test(input)) {
+      return {
+        nextState: { ...baseState, active: true, runMode: "autopilot", step: 0, waitingFor: "projectExplain" },
+        messages: [
+          chainMessage("Autopilot it is — I'll keep you moving. You just step in when I need you.\n\nFirst we need a **project**. A project in Demand Drivers is a container for one brand and market — it holds your data, classifications, model runs, and outputs. Everything lives here so work is reusable and shareable.\n\nFill in the details below, or describe the project to me and I'll set it up."),
+          chainMessage("", "newProject"),
+        ],
+      };
+    }
   }
 
-  if (state.waitingFor === "classification" && /\b(continue|approved|approve|yes|go|next)\b/.test(input)) {
-    const messages = [chainMessage(`Moving to Step 2 — DRD. Starting brand and market Q&A now.\n\nShare any brand, market, competitor, seasonality, or business context I should include in the DRD.`)];
-    if (state.runMode === "guided") messages.unshift(guidedMessage(1, "Data Quality & Setup", "Classification is locked. 47 of 50 variables classified, 3 flagged for review."));
-    return { nextState: { ...state, step: 2, waitingFor: "drd" }, messages };
+  if (baseState.waitingFor === "datacube") {
+    if (isDatacubeQuestion(input)) return { nextState: baseState, messages: [chainMessage(datacubeAnswer(input))] };
+    if (/\b(uploaded|done|here it is|file uploaded|continue)\b/.test(input)) {
+      const messages = [
+        chainMessage("Got it — let me run a quick data check..."),
+        chainMessage("✅ All data looks good.\n\n- 156 weekly observations detected (Jan 2022 – Dec 2024)\n- 43 variables identified\n- No missing values in KPI column\n- Date column parsed correctly\n- Currency: GBP · Periodicity: Weekly"),
+      ];
+      if (baseState.runMode === "guided") messages.push(chainMessage("Ready to move to variable classification?"));
+      if (baseState.runMode === "autopilot") {
+        messages.push(chainMessage("Moving to classification now."));
+        messages.push(...classificationMessages(baseState.runMode));
+        return { nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" }, messages };
+      }
+      return { nextState: { ...baseState, step: 1, waitingFor: "classification" }, messages };
+    }
   }
 
-  if (state.waitingFor === "drd" && input.length > 8) {
-    return { nextState: { ...state, step: 4, currentBatch: 1, waitingFor: "modelReady" }, messages: [chainMessage(`✅ Step 2 complete — DRD | Project: ${projectContext.project}\nGenerated DRD summary and captured your market context.\n\n✅ Step 3 complete — Config (Batch 1) | Project: ${projectContext.project}\n⏸ Autopilot paused — model needs to run. Triggering the model run in DD now — I'll continue once results are available. Say ready when results are available.`, "transformations")] };
+  if (baseState.waitingFor === "classification") {
+    if (baseState.runMode === "guided" && /\b(yes|ready|go|next|continue)\b/.test(input)) {
+      return { nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" }, messages: classificationMessages(baseState.runMode) };
+    }
+    if (baseState.runMode === "autopilot") {
+      return { nextState: { ...baseState, step: 3, waitingFor: "spendConfirm" }, messages: classificationMessages(baseState.runMode) };
+    }
   }
 
-  if (state.waitingFor === "modelReady" && /\b(ready|results available|continue)\b/.test(input)) {
-    return { nextState: { ...state, step: 4, currentBatch: 3, waitingFor: "checkpoint" }, messages: [chainMessage(`⚠️ Batch 1 — Issues found. Health: 11/19\n- Incremental contribution is low at 14.3%\n- TV prior is too tight for observed response\n- Online coupon is over-attributing base demand\n\nAuto-generating revised config (Batch 2)...\n\n⚠️ Batch 2 — Issues found. Health: 14/19\n- R² improved to 80.1%\n- Incremental moved to 16.2%\n- Remaining issue: digital saturation still too flat\n\nAuto-generating revised config (Batch 3)...\n\n⏸ Autopilot checkpoint — Batch 3 Project: ${projectContext.project}\n\n| Batch | R² | MAPE | Health | Incremental% | Key change made |\n|---|---:|---:|---:|---:|---|\n| 1 | 78.2% | 6.8% | 11 / 19 | 14.3% | Initial config |\n| 2 | 80.1% | 6.1% | 14 / 19 | 16.2% | Loosened TV prior |\n| 3 | 81.4% | 5.9% | 17 / 19 | 18.1% | Tightened Online Coupon |\n\nOptions: continue — keep iterating automatically; sign off — accept this model and move to summary sheet; stop — pause autopilot and review manually.`, "results")] };
+  if (baseState.waitingFor === "spendConfirm" && /\b(confirm|confirmed|done|looks good|proceed|approve)\b/.test(input)) {
+    const messages = baseState.runMode === "guided"
+      ? [chainMessage("✅ Spend mapping confirmed. Input module complete.\n\nHere is the model configuration I've prepared. Review the settings and trigger the run when you're ready.", "configuration")]
+      : [
+          chainMessage("✅ Spend mapping confirmed. Input module complete.\n\nI have everything I need to configure the model. Setting it up now..."),
+          chainMessage("Model configuration is ready. Here's a summary of what I've set up — you can review and edit any setting in the UI. If you'd like to make no changes, just say go ahead and I'll trigger the model run.", "configuration"),
+        ];
+    return { nextState: { ...baseState, step: 4, waitingFor: "modelConfig" }, messages };
   }
 
-  if (state.waitingFor === "checkpoint" && /\b(sign off|good model|this is fine|summary|continue|yes)\b/.test(input)) {
-    return { nextState: { ...state, step: 6, waitingFor: "complete" }, messages: [chainMessage(`✅ Step 4 complete — Model signed off (Batch 3) | Project: ${projectContext.project}\nHealth: 17/19 | R²: 81.4% | Incremental: 18.1%\n\nSkipping optimization and moving to summary sheet now.\n\n✅ Step 5 complete — Summary Sheet | Project: ${projectContext.project}\nMoving to final presentation now.\n\nStep 6 — mmm-final-presentation hasn't been built yet. The chain will pause here. All other outputs are ready.`, "summary")] };
+  if (baseState.waitingFor === "modelConfig" && /\b(go ahead|run|trigger|run model|confirmed|looks good|yes)\b/.test(input)) {
+    return {
+      nextState: { ...baseState, step: 5, waitingFor: "modelResults" },
+      messages: [
+        chainMessage("✅ Model run triggered.\n\nThis typically takes 8–12 minutes. I'll update you as results come in."),
+        chainMessage("Results are in. Here's the model output — qualified models are ranked by health score, disqualified models show the reason, and I've highlighted my recommended model based on R², MAPE, and incremental contribution.", "results"),
+        chainMessage("You can view a detailed output for any model or compare multiple. Just say **show model 1** or **compare models 1 and 2**."),
+      ],
+    };
+  }
+
+  if (baseState.waitingFor === "modelResults") {
+    const match = input.match(/(?:show|view|open)?\s*model\s*(\d+)/);
+    if (match) {
+      const modelNumber = match[1];
+      return {
+        nextState: { ...baseState, step: 6, waitingFor: "complete" },
+        messages: [
+          chainMessage(`Here's the full output for Model ${modelNumber}.`, "summary"),
+          chainMessage(`**Model ${modelNumber} summary**\n\nR² is 81.4% — the model explains a strong share of sales variance. Incremental contribution is 18.1%, meaning roughly 18 pence in every pound of sales is driven by paid media activity. The remaining 81.9% is base — driven by brand equity, distribution, and structural factors.\n\n**Top contributors:**\n- TV (Traditional): 7.2% incremental share — highest single channel\n- Paid Search: 4.8% — strong efficiency relative to spend\n- Meta: 3.1% — solid volume driver, ROI slightly below average\n\nHoldout MAPE is 5.9% — model generalises well to unseen data. Health score 17/19.\n\nThis model is ready to sign off. Want me to run budget optimisation next, or move to the summary sheet?`),
+        ],
+      };
+    }
+  }
+
+  if (/\bwhat can you help me with\b/.test(input)) {
+    return { nextState: baseState, messages: [chainMessage("I can run the MMM skill chain with you: project setup, datacube checks, variable classification, spend mapping, model configuration, model runs, interpretation, comparisons, and next-step recommendations.")] };
   }
 
   return null;
+}
+
+function classificationMessages(runMode?: RunMode): Message[] {
+  return [
+    chainMessage("Based on your data, I've autoclassified all 43 variables into the required structure for a meaningful model.\n\nI've selected **Sales** as the KPI. The remaining variables are grouped into Base, Media (Traditional and Digital), Price, Promotions, Distribution, and Macro.\n\nYou can review and correct any classification in the UI below — changes take effect immediately.", "classification"),
+    chainMessage("You can correct classifications at any point — I'll keep track of changes. Now, before we map spends, let me explain why this matters.\n\nAfter the model runs, to view **response curves and ROIs** for each media variable, we need spend data mapped to each metric — impressions, GRPs, clicks, and so on. Without spend, the model can measure effectiveness but not efficiency. Let me map what I can find automatically.", "mapping"),
+    chainMessage(`I've auto-mapped spends to most variables. A few notes:\n\n⚠️ **3 variables have no corresponding spend data** — TV_GRP, Print_Imps, and OOH_Imps. You'll need to upload spend files for these to unlock ROI calculations.\n\n🔍 **2 mappings I'm less confident on** — Meta_VideoViews and YouTube_Completions. Please review those rows in the UI above before confirming.\n\n${runMode === "guided" ? "Take a look and confirm when you're happy with the mappings." : "Review the mappings above. When you're ready, say confirm and I'll lock spend mapping and move to model configuration."}`),
+  ];
 }
 
 interface ChatStageProps {
