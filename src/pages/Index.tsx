@@ -476,6 +476,18 @@ const Index = () => {
     setThinking(false);
   };
 
+  const handleModeSelect = (mode: RunMode) => {
+    handleSend(mode === "autopilot" ? "Autopilot" : "Guided");
+  };
+
+  const handleGuidedContinue = () => {
+    handleSend("continue");
+  };
+
+  const handleGuidedPause = () => {
+    handleSend("pause");
+  };
+
   if (authLoading) {
     return <div className="min-h-screen bg-background" />;
   }
@@ -515,6 +527,9 @@ const Index = () => {
           onClassificationConfirm={handleClassificationConfirm}
           onVariablePropertiesSave={handleVariablePropertiesSave}
           onRunModel={() => handleRunModel()}
+          onModeSelect={handleModeSelect}
+          onGuidedContinue={handleGuidedContinue}
+          onGuidedPause={handleGuidedPause}
           theme={theme}
           palette={palette}
           onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
