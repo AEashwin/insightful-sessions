@@ -68,7 +68,7 @@ interface Message {
 type ThemeMode = "light" | "dark";
 type ColorPalette = "purple" | "analyst" | "cockpit";
 type RunMode = "guided" | "autopilot";
-type ChainGate = "mode" | "datacube" | "classification" | "drd" | "modelReady" | "checkpoint" | "complete";
+type ChainGate = "projectPick" | "mode" | "projectExplain" | "datacube" | "classification" | "spendConfirm" | "modelConfig" | "modelResults" | "complete";
 
 interface SkillChainState {
   active: boolean;
@@ -76,6 +76,10 @@ interface SkillChainState {
   step: number;
   currentBatch: number;
   waitingFor?: ChainGate;
+  projectName?: string;
+  brand?: string;
+  market?: string;
+  bu?: string;
 }
 
 const paletteOptions: Array<{ id: ColorPalette; name: string; note: string }> = [
@@ -114,13 +118,7 @@ const seededMessages: Message[] = [
   {
     id: "m1",
     role: "assistant",
-    text: "Welcome back, John. I'm your MMM assistant on Demand Drivers.\n\nWould you like to resume an existing project or start a new one?"
-  },
-  { id: "m2", role: "user", text: "Resume Demo_Brand4_2025." },
-  {
-    id: "m3",
-    role: "assistant",
-    text: "Resuming **Demo_Brand4_2025** — Brand4 · UK.\n\nYou're at Step 4 of 7 — Model Interpretation, Batch 2 complete. Health score is 14/19. R² is 80.1%.\n\nShall I show a full snapshot or jump straight to next steps?"
+    text: "Hi John 👋 I'm your MMM assistant on Demand Drivers.\n\nWould you like to start a new project or continue with a previous one?"
   },
 ];
 
