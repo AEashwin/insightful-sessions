@@ -208,115 +208,25 @@ const Index = () => {
   const activeThreadTitle = activeThreadId ? (threadTitles[activeThreadId] ?? activeThread?.title) : "New chat";
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
+  const appendStaggeredMessages = (base: Message[], replyMessages: Message[]) => {
+    setMessages(base);
+    replyMessages.forEach((message, index) => {
+      const delay = index === 0 ? 0 : index === 1 ? 1200 : 2000;
+      window.setTimeout(() => {
+        setMessages((prev) => [...prev, { ...message, id: `${message.id}-${index}-${Date.now()}` }]);
+      }, delay);
+    });
+  };
+
   const handleSend = async (text: string) => {
     const userMsg: Message = { id: `u${Date.now()}`, role: "user", text };
     const history = [...messages, userMsg];
     setMessages(history);
 
-    if (/\b(show me|show snapshot|full snapshot|snapshot)\b/i.test(text)) {
-      setMessages([
-        ...history,
-        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the current project snapshot.", card: "project" },
-      ]);
-      setThinking(false);
-      return;
-    }
-
-    if (/\b(next steps|jump.*next|where i left off)\b/i.test(text)) {
-      setMessages([
-        ...history,
-        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the workflow position and the next step I recommend.", card: "workflow" },
-      ]);
-      setThinking(false);
-      return;
-    }
-
-    if (modelRunPending && /\b(ok|okay|yes|approve|approved|confirm|confirmed|go ahead|proceed)\b/i.test(text)) {
-      setModelRunPending(false);
-      setMessages([
-        ...history,
-        {
-          id: `a${Date.now() + 1}`,
-          role: "assistant",
-          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll track candidate generation below and surface recommendations once all models are complete.",
-          card: "generation",
-        },
-      ]);
-      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
-      setThinking(false);
-      return;
-    }
-
-    const isSpendConfirmation = /\b(confirm|confirmed|approve|approved|done|proceed)\b/i.test(text)
-      && messages.slice().reverse().some((message) => message.role === "assistant" && message.card === "mapping");
-    if (isSpendConfirmation) {
-      setMessages([
-        ...history,
-        {
-          id: `a${Date.now() + 1}`,
-          role: "assistant",
-          text: "Spend mapping confirmed. I’m checking the selected variables before opening properties...",
-        },
-      ]);
-      window.setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `a${Date.now()}`,
-            role: "assistant",
-            text: "After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
-            card: "properties",
-          },
-        ]);
-      }, 600);
-      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 3), waitingFor: "drd" } : current);
-      setThinking(false);
-      return;
-    }
-
-    const isModelRunRequest = /\b(run model|start model|execute model|run it|model run)\b/i.test(text)
-      && messages.slice().reverse().some((message) => message.role === "assistant" && message.card === "configuration");
-    if (isModelRunRequest) {
-      handleRunModel(history);
-      return;
-    }
-
-    if (/\b(model config|model configuration|configure model|model setup)\b/i.test(text)) {
-      setMessages([
-        ...history,
-        {
-          id: `a${Date.now() + 1}`,
-          role: "assistant",
-          text: "Here is **Model Configuration**. You can edit KPI, model type/form, duration, holdout, selected variables, role, transformations, saturation, priors, and QC directly in the UI. Use View transformations / saturation / priors / QC to expose those editable settings.",
-          card: "configuration",
-        },
-      ]);
-      setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
-      setThinking(false);
-      return;
-    }
-
     const chainReply = getSkillChainReply(text, chain);
     if (chainReply) {
       setChain(chainReply.nextState);
-      setMessages([...history, ...chainReply.messages]);
-      setThinking(false);
-      return;
-    }
-
-    if (/\b(create|start|set up)\b.*\bnew project\b/i.test(text)) {
-      setActiveThreadId("");
-      setMessages([
-        userMsg,
-        {
-          id: `a${Date.now() + 1}`,
-          role: "assistant",
-          text: activeProjectId
-            ? "I'll create the new project in a new chat window so it stays separate from this project session."
-            : "Let's create the new project in this new chat window.",
-          card: "newProject",
-        },
-      ]);
+      appendStaggeredMessages(history, chainReply.messages);
       setThinking(false);
       return;
     }
