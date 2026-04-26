@@ -220,7 +220,8 @@ const Index = () => {
         {
           id: `a${Date.now() + 1}`,
           role: "assistant",
-          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll continue once the run outputs are available.",
+          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll track candidate generation below and surface recommendations once all models are complete.",
+          card: "generation",
         },
       ]);
       setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
@@ -316,7 +317,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
