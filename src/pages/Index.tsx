@@ -12,6 +12,8 @@ import { VariablePropertiesCard } from "@/components/chat/cards/VariableProperti
 import { SpendMappingCard } from "@/components/chat/cards/SpendMappingCard";
 import { ModelConfigurationCard } from "@/components/chat/cards/ModelConfigurationCard";
 import { ModelGenerationCard } from "@/components/chat/cards/ModelGenerationCard";
+import { ModeSelectionCard } from "@/components/chat/cards/ModeSelectionCard";
+import { GuidedContinueCard } from "@/components/chat/cards/GuidedContinueCard";
 import { ModelTransformationsCard } from "@/components/chat/cards/ModelTransformationsCard";
 import { ModelResultsCard } from "@/components/chat/cards/ModelResultsCard";
 import { ModelSummaryCard } from "@/components/chat/cards/ModelSummaryCard";
@@ -44,6 +46,8 @@ type CardKey =
   | "mapping"
   | "configuration"
   | "generation"
+  | "modeSelection"
+  | "guidedContinue"
   | "transformations"
   | "results"
   | "summary"
@@ -58,6 +62,7 @@ interface Message {
   text?: string;
   card?: CardKey;
   prefill?: Partial<{ name: string; brand: string; market: string; bu: string }>;
+  guidedStep?: { stepNumber: number; stepName: string; summary: string };
 }
 
 type ThemeMode = "light" | "dark";
@@ -106,25 +111,16 @@ const threads: ChatThread[] = [
 ];
 
 const seededMessages: Message[] = [
-  { id: "m1", role: "user", text: "Let's start a new MMM session." },
   {
-    id: "m2",
+    id: "m1",
     role: "assistant",
-    text: "Welcome to Demand Drivers. Pick a project to resume or create a new one — you can filter by market.",
-    card: "selector",
+    text: "Welcome back, John. I'm your MMM assistant on Demand Drivers.\n\nWould you like to resume an existing project or start a new one?"
   },
-  { id: "m3", role: "user", text: "Resume Demo_Brand4_2025." },
+  { id: "m2", role: "user", text: "Resume Demo_Brand4_2025." },
   {
-    id: "m4",
+    id: "m3",
     role: "assistant",
-    text: "Loaded **Demo_Brand4_2025**. You're at stage 7 of 9 (Model Interpretation). Snapshot below:",
-    card: "project",
-  },
-  {
-    id: "m5",
-    role: "assistant",
-    text: "Here's the full workflow tracker — ask for any step at any time.",
-    card: "workflow",
+    text: "Resuming **Demo_Brand4_2025** — Brand4 · UK.\n\nYou're at Step 4 of 7 — Model Interpretation, Batch 2 complete. Health score is 14/19. R² is 80.1%.\n\nShall I show a full snapshot or jump straight to next steps?"
   },
 ];
 
