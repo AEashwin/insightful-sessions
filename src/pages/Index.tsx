@@ -659,12 +659,12 @@ function ChatStage({
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-sidebar-accent/35 via-background to-accent/25">
             <div className={`${widthClass} mx-auto px-6 py-5 space-y-6 transition-[max-width] duration-200 ease-linear`}>
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <div className="mt-2">{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, prefill: m.prefill })}</div>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, prefill: m.prefill })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
@@ -685,6 +685,23 @@ function ChatStage({
         </>
       )}
     </main>
+  );
+}
+
+function McpAppFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card to-accent/45 p-1 shadow-[0_18px_45px_-30px_hsl(var(--primary)/0.65)]">
+      <div className="flex items-center justify-between gap-3 px-3 py-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.12)]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">MCP App UI</span>
+          <span className="hidden h-3 w-px bg-border sm:block" />
+          <span className="truncate text-[11px] font-semibold text-foreground">Demand Drivers workspace</span>
+        </div>
+        <span className="rounded-full border border-success/25 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">Editable</span>
+      </div>
+      <div className="overflow-hidden rounded-lg border border-border/80 bg-card">{children}</div>
+    </div>
   );
 }
 
