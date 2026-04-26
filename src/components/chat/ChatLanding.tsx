@@ -7,15 +7,15 @@ interface ChatLandingProps {
 
 const tiles = [
   {
-    icon: FolderOpen,
-    label: "Resume my last project",
-    prompt: "Resume my last project.",
-    accent: "text-primary",
-  },
-  {
     icon: Plus,
     label: "Start a new MMM session",
     prompt: "Start a new MMM session.",
+    accent: "text-primary",
+  },
+  {
+    icon: FolderOpen,
+    label: "Resume a previous project",
+    prompt: "Resume a previous project.",
     accent: "text-emerald-500",
   },
   {
@@ -26,8 +26,8 @@ const tiles = [
   },
   {
     icon: Clock,
-    label: "Show me where I left off",
-    prompt: "Show me where I left off.",
+    label: "What can you help me with?",
+    prompt: "What can you help me with?",
     accent: "text-violet-500",
   },
 ];
