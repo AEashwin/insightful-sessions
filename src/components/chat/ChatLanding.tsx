@@ -8,26 +8,26 @@ interface ChatLandingProps {
 const tiles = [
   {
     icon: FolderOpen,
-    label: "Continue a project",
-    prompt: "Show my existing projects so I can pick one to resume.",
+    label: "Resume my last project",
+    prompt: "Resume my last project.",
     accent: "text-primary",
   },
   {
     icon: Plus,
-    label: "Start a new project",
-    prompt: "Help me set up a new project — guide me through brand, market and KPI.",
+    label: "Start a new MMM session",
+    prompt: "Start a new MMM session.",
     accent: "text-emerald-500",
   },
   {
     icon: BarChart3,
-    label: "Run a model",
-    prompt: "I want to run a new model on an existing project.",
+    label: "Run the skill chain in autopilot",
+    prompt: "Run the skill chain in autopilot.",
     accent: "text-amber-500",
   },
   {
     icon: Clock,
-    label: "Show recent activity",
-    prompt: "Show me what I worked on recently across projects.",
+    label: "Show me where I left off",
+    prompt: "Show me where I left off.",
     accent: "text-violet-500",
   },
 ];
