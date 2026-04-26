@@ -276,18 +276,18 @@ export function ClassificationCard({ onConfirm }: ClassificationCardProps) {
 
 function BucketPanel({ bucket, count, selected, onToggle, onMove, onNewGroup, compact = false }: { bucket: Bucket; count: number; selected: string[]; onToggle: (name: string) => void; onMove: (bucketId: string, groupId: string, variables?: string[]) => void; onNewGroup?: () => void; compact?: boolean }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+    <section className="overflow-hidden rounded-lg border border-primary/15 bg-background shadow-sm">
+      <div className="flex items-center justify-between border-b border-primary/10 bg-background px-3 py-2">
         <div className="flex items-center gap-2">
           <span className="text-xs" aria-hidden>{bucket.icon}</span>
-          <p className="text-[11px] font-semibold text-foreground">{bucket.title}</p>
+          <p className="text-xs font-semibold text-foreground">{bucket.title}</p>
         </div>
         <div className="flex items-center gap-2">
-          {onNewGroup && <button type="button" onClick={onNewGroup} className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-background px-2 text-[10px] font-medium text-foreground hover:bg-muted"><Plus size={10} /> New group</button>}
-          <Badge variant="outline" className="h-5 bg-muted/40 text-[10px]">{count}</Badge>
+          {onNewGroup && <button type="button" onClick={onNewGroup} className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-foreground hover:bg-muted"><Plus size={11} /> New group</button>}
+          <Badge variant="outline" className="h-6 bg-primary/5 px-2 text-[11px]">{count}</Badge>
         </div>
       </div>
-      <div className={`space-y-1 p-2 ${compact ? "min-h-[70px]" : "min-h-[324px]"}`}>
+      <div className={`space-y-1.5 p-2.5 ${compact ? "min-h-[86px]" : "min-h-[324px]"}`}>
         {bucket.groups.map((group) => (
           <GroupBlock key={group.id} bucketId={bucket.id} group={group} selected={selected} onToggle={onToggle} onMove={onMove} compact={compact} depth={0} />
         ))}
