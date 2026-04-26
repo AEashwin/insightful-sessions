@@ -32,7 +32,7 @@ export function ChatMessage({ role, children }: ChatMessageProps) {
       </div>
       <div className="flex-1 pt-1 min-w-0">
         <p className="text-xs font-semibold text-primary mb-1">DD Assistant</p>
-        <div className="text-sm text-foreground leading-relaxed space-y-3">{children}</div>
+        <div className="border-l-2 border-primary pl-3 text-sm text-foreground leading-[1.65] space-y-3">{children}</div>
       </div>
     </div>
   );
