@@ -111,6 +111,16 @@ export function ModelGenerationCard() {
       </div>
 
       <div className="bg-gradient-to-b from-sidebar-accent/40 to-card p-3">
+        <div className="mb-3 flex flex-col gap-2 rounded-lg border border-primary/20 bg-background/85 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Select models to view output</p>
+            <p className="text-[11px] text-muted-foreground">Choose 1 to 3 qualified or recommended models for side-by-side output comparison.</p>
+          </div>
+          <Button size="sm" className="h-8 text-xs" disabled={selectedModels.length === 0} onClick={() => setShowOutput(true)}>
+            View output ({selectedModels.length}/3)
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid h-10 w-full grid-cols-3 bg-background/80 p-1">
             <TabsTrigger value="qualified" className="text-xs">Qualified</TabsTrigger>
@@ -119,18 +129,20 @@ export function ModelGenerationCard() {
           </TabsList>
 
           <TabsContent value="qualified" className="mt-3">
-            <ModelTable models={partitions.qualified} empty="Qualified models will appear here as QC thresholds are met." />
+            <ModelTable models={partitions.qualified} empty="Qualified models will appear here as QC thresholds are met." selectedModels={selectedModels} onToggleModel={toggleModel} />
           </TabsContent>
           <TabsContent value="disqualified" className="mt-3">
-            <ModelTable models={partitions.disqualified} empty="Disqualified models will appear here with QC reason codes." />
+            <ModelTable models={partitions.disqualified} empty="Disqualified models will appear here with QC reason codes." showStatus />
           </TabsContent>
           <TabsContent value="recommended" className="mt-3">
             <div className="mb-2 flex items-center gap-2 rounded-md border border-success/25 bg-success/10 px-3 py-2 text-xs text-success">
               <Sparkles size={14} /> Recommended tab is available after all candidate models are complete.
             </div>
-            <ModelTable models={partitions.recommended} empty="Recommendations unlock at 100% completion." recommended />
+            <ModelTable models={partitions.recommended} empty="Recommendations unlock at 100% completion." recommended selectedModels={selectedModels} onToggleModel={toggleModel} />
           </TabsContent>
         </Tabs>
+
+        {showOutput && outputModels.length > 0 && <ModelOutputComparison models={outputModels} />}
       </div>
     </div>
   );
