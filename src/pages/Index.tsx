@@ -11,6 +11,7 @@ import { DataUploadCard } from "@/components/chat/cards/DataUploadCard";
 import { VariablePropertiesCard } from "@/components/chat/cards/VariablePropertiesCard";
 import { SpendMappingCard } from "@/components/chat/cards/SpendMappingCard";
 import { ModelConfigurationCard } from "@/components/chat/cards/ModelConfigurationCard";
+import { ModelGenerationCard } from "@/components/chat/cards/ModelGenerationCard";
 import { ModelTransformationsCard } from "@/components/chat/cards/ModelTransformationsCard";
 import { ModelResultsCard } from "@/components/chat/cards/ModelResultsCard";
 import { ModelSummaryCard } from "@/components/chat/cards/ModelSummaryCard";
@@ -42,6 +43,7 @@ type CardKey =
   | "properties"
   | "mapping"
   | "configuration"
+  | "generation"
   | "transformations"
   | "results"
   | "summary"
@@ -147,6 +149,7 @@ const renderCard = (
     case "properties": return <VariablePropertiesCard onSave={ctx.onVariablePropertiesSave} />;
     case "mapping": return <SpendMappingCard />;
     case "configuration": return <ModelConfigurationCard onRunModel={ctx.onRunModel} />;
+    case "generation": return <ModelGenerationCard />;
     case "transformations": return <ModelTransformationsCard />;
     case "results": return <ModelResultsCard />;
     case "summary": return <ModelSummaryCard />;
@@ -217,7 +220,8 @@ const Index = () => {
         {
           id: `a${Date.now() + 1}`,
           role: "assistant",
-          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll continue once the run outputs are available.",
+          text: "Model triggered. It will take approximately **10 minutes** to complete. I’ll track candidate generation below and surface recommendations once all models are complete.",
+          card: "generation",
         },
       ]);
       setChain((current) => current.active ? { ...current, step: Math.max(current.step, 5), waitingFor: "checkpoint" } : current);
@@ -313,7 +317,7 @@ const Index = () => {
         return;
       }
 
-      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","transformations","results","summary","optimisation","flighting","workflow","classification"];
+      const validCards: CardKey[] = ["project","selector","newProject","upload","groups","properties","mapping","configuration","generation","transformations","results","summary","optimisation","flighting","workflow","classification"];
       const card = (data?.card ?? null) as CardKey | null;
       const aiMsg: Message = {
         id: `a${Date.now()}`,
