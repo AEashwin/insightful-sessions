@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Sparkles, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -37,6 +39,8 @@ const allModels: CandidateModel[] = Array.from({ length: 64 }, (_, index) => {
 export function ModelGenerationCard() {
   const [processed, setProcessed] = useState(5);
   const [activeTab, setActiveTab] = useState("qualified");
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [showOutput, setShowOutput] = useState(false);
   const visibleModels = allModels.slice(0, processed);
   const progress = Math.round((processed / allModels.length) * 100);
   const complete = processed >= allModels.length;
@@ -64,6 +68,18 @@ export function ModelGenerationCard() {
 
     return { qualified, disqualified, recommended };
   }, [visibleModels, complete]);
+
+  const selectableModels = [...partitions.qualified, ...partitions.recommended];
+  const outputModels = allModels.filter((model) => selectedModels.includes(model.id));
+
+  const toggleModel = (id: string) => {
+    setSelectedModels((current) => {
+      if (current.includes(id)) return current.filter((modelId) => modelId !== id);
+      if (current.length >= 3) return current;
+      return [...current, id];
+    });
+    setShowOutput(false);
+  };
 
   return (
     <div className="overflow-hidden rounded-lg bg-card">
