@@ -215,6 +215,24 @@ const Index = () => {
     const history = [...messages, userMsg];
     setMessages(history);
 
+    if (/\b(show me|show snapshot|full snapshot|snapshot)\b/i.test(text)) {
+      setMessages([
+        ...history,
+        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the current project snapshot.", card: "project" },
+      ]);
+      setThinking(false);
+      return;
+    }
+
+    if (/\b(next steps|jump.*next|where i left off)\b/i.test(text)) {
+      setMessages([
+        ...history,
+        { id: `a${Date.now() + 1}`, role: "assistant", text: "Here’s the workflow position and the next step I recommend.", card: "workflow" },
+      ]);
+      setThinking(false);
+      return;
+    }
+
     if (modelRunPending && /\b(ok|okay|yes|approve|approved|confirm|confirmed|go ahead|proceed)\b/i.test(text)) {
       setModelRunPending(false);
       setMessages([
@@ -239,10 +257,20 @@ const Index = () => {
         {
           id: `a${Date.now() + 1}`,
           role: "assistant",
-          text: "Spend mapping confirmed. After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
-          card: "properties",
+          text: "Spend mapping confirmed. I’m checking the selected variables before opening properties...",
         },
       ]);
+      window.setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a${Date.now()}`,
+            role: "assistant",
+            text: "After your corrections, coverage moved to **17 mapped columns (89%)**, **0 critical missing spend inputs**, and **2 approved spend-only variables**. Meta split is now approved, so the next logical step is **Variable Properties**.",
+            card: "properties",
+          },
+        ]);
+      }, 600);
       setChain((current) => current.active ? { ...current, step: Math.max(current.step, 3), waitingFor: "drd" } : current);
       setThinking(false);
       return;
