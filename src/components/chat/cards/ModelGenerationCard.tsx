@@ -199,3 +199,63 @@ function ModelTable({ models, empty, recommended = false, showStatus = false, se
     </div>
   );
 }
+
+const contributionRows = [
+  { label: "Base contribution", base: 46 },
+  { label: "TV contribution", base: 18 },
+  { label: "Digital contribution", base: 14 },
+  { label: "Promo contribution", base: 9 },
+  { label: "Seasonality contribution", base: 5 },
+  { label: "TV ROI", base: 3.1, suffix: "x" },
+  { label: "Digital ROI", base: 2.6, suffix: "x" },
+  { label: "Promo ROI", base: 1.3, suffix: "x" },
+];
+
+function ModelOutputComparison({ models }: { models: CandidateModel[] }) {
+  return (
+    <section className="mt-3 rounded-lg border border-primary/20 bg-background/90 p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold text-foreground">Model output comparison</p>
+          <p className="text-[11px] text-muted-foreground">Statistical parameters, contribution mix, and ROI across selected models.</p>
+        </div>
+        <Badge variant="outline" className="border-primary/25 bg-primary/10 text-primary">{models.length} selected</Badge>
+      </div>
+
+      <div className="overflow-auto rounded-lg border border-border bg-card">
+        <table className="w-full min-w-[620px] text-xs">
+          <thead className="bg-primary/10 text-primary">
+            <tr>
+              <th className="px-3 py-2 text-left font-semibold">Metric</th>
+              {models.map((model) => <th key={model.id} className="px-3 py-2 text-right font-semibold">{model.id}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            <ComparisonRow label="R² / Rsq" values={models.map((model) => model.rsq.toFixed(2))} strong />
+            <ComparisonRow label="MAPE" values={models.map((model) => `${model.mape.toFixed(1)}%`)} />
+            <ComparisonRow label="Holdout MAPE" values={models.map((model) => `${model.holdoutMape.toFixed(1)}%`)} />
+            {contributionRows.map((row, rowIndex) => (
+              <ComparisonRow
+                key={row.label}
+                label={row.label}
+                values={models.map((model, modelIndex) => {
+                  const value = row.base + ((model.rsq * 100 + rowIndex * 3 + modelIndex * 2) % 7) - 3;
+                  return row.suffix ? `${value.toFixed(1)}${row.suffix}` : `${Math.max(1, Math.round(value))}%`;
+                })}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonRow({ label, values, strong = false }: { label: string; values: string[]; strong?: boolean }) {
+  return (
+    <tr className="border-t border-border odd:bg-background even:bg-sidebar-accent/35">
+      <td className="px-3 py-2 font-medium text-foreground">{label}</td>
+      {values.map((value, index) => <td key={`${label}-${index}`} className={`px-3 py-2 text-right ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{value}</td>)}
+    </tr>
+  );
+}
