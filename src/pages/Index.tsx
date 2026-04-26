@@ -435,7 +435,7 @@ const Index = () => {
         card: "mapping",
       },
     ]);
-    }, 800);
+    }, 600);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 2), waitingFor: "drd" } : current);
   };
 
@@ -458,7 +458,7 @@ const Index = () => {
         card: "configuration",
       },
     ]);
-    }, 800);
+    }, 600);
     setChain((current) => current.active ? { ...current, step: Math.max(current.step, 4), waitingFor: "modelReady" } : current);
   };
 
