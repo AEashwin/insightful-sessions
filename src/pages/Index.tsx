@@ -747,7 +747,7 @@ function ChatStage({
               {messages.map((m) => (
                 <ChatMessage key={m.id} role={m.role}>
                   {m.text && <p className="whitespace-pre-wrap">{renderText(m.text)}</p>}
-                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, prefill: m.prefill })}</McpAppFrame>}
+                  {m.card && <McpAppFrame>{renderCard(m.card, { onPickProject, onCreateProject, onNewProject, onClassificationConfirm, onVariablePropertiesSave, onRunModel, onModeSelect, onGuidedContinue, onGuidedPause, prefill: m.prefill, guidedStep: m.guidedStep })}</McpAppFrame>}
                 </ChatMessage>
               ))}
               {thinking && (
