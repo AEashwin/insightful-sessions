@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Sparkles, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -37,6 +39,8 @@ const allModels: CandidateModel[] = Array.from({ length: 64 }, (_, index) => {
 export function ModelGenerationCard() {
   const [processed, setProcessed] = useState(5);
   const [activeTab, setActiveTab] = useState("qualified");
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [showOutput, setShowOutput] = useState(false);
   const visibleModels = allModels.slice(0, processed);
   const progress = Math.round((processed / allModels.length) * 100);
   const complete = processed >= allModels.length;
@@ -64,6 +68,17 @@ export function ModelGenerationCard() {
 
     return { qualified, disqualified, recommended };
   }, [visibleModels, complete]);
+
+  const outputModels = allModels.filter((model) => selectedModels.includes(model.id));
+
+  const toggleModel = (id: string) => {
+    setSelectedModels((current) => {
+      if (current.includes(id)) return current.filter((modelId) => modelId !== id);
+      if (current.length >= 3) return current;
+      return [...current, id];
+    });
+    setShowOutput(false);
+  };
 
   return (
     <div className="overflow-hidden rounded-lg bg-card">
@@ -95,6 +110,16 @@ export function ModelGenerationCard() {
       </div>
 
       <div className="bg-gradient-to-b from-sidebar-accent/40 to-card p-3">
+        <div className="mb-3 flex flex-col gap-2 rounded-lg border border-primary/20 bg-background/85 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold text-foreground">Select models to view output</p>
+            <p className="text-[11px] text-muted-foreground">Choose 1 to 3 qualified or recommended models for side-by-side output comparison.</p>
+          </div>
+          <Button size="sm" className="h-8 text-xs" disabled={selectedModels.length === 0} onClick={() => setShowOutput(true)}>
+            View output ({selectedModels.length}/3)
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid h-10 w-full grid-cols-3 bg-background/80 p-1">
             <TabsTrigger value="qualified" className="text-xs">Qualified</TabsTrigger>
@@ -103,18 +128,20 @@ export function ModelGenerationCard() {
           </TabsList>
 
           <TabsContent value="qualified" className="mt-3">
-            <ModelTable models={partitions.qualified} empty="Qualified models will appear here as QC thresholds are met." />
+            <ModelTable models={partitions.qualified} empty="Qualified models will appear here as QC thresholds are met." selectedModels={selectedModels} onToggleModel={toggleModel} />
           </TabsContent>
           <TabsContent value="disqualified" className="mt-3">
-            <ModelTable models={partitions.disqualified} empty="Disqualified models will appear here with QC reason codes." />
+            <ModelTable models={partitions.disqualified} empty="Disqualified models will appear here with QC reason codes." showStatus />
           </TabsContent>
           <TabsContent value="recommended" className="mt-3">
             <div className="mb-2 flex items-center gap-2 rounded-md border border-success/25 bg-success/10 px-3 py-2 text-xs text-success">
               <Sparkles size={14} /> Recommended tab is available after all candidate models are complete.
             </div>
-            <ModelTable models={partitions.recommended} empty="Recommendations unlock at 100% completion." recommended />
+            <ModelTable models={partitions.recommended} empty="Recommendations unlock at 100% completion." recommended selectedModels={selectedModels} onToggleModel={toggleModel} />
           </TabsContent>
         </Tabs>
+
+        {showOutput && outputModels.length > 0 && <ModelOutputComparison models={outputModels} />}
       </div>
     </div>
   );
@@ -130,7 +157,7 @@ function Metric({ label, value, tone }: { label: string; value: number; tone: "s
   );
 }
 
-function ModelTable({ models, empty, recommended = false }: { models: CandidateModel[]; empty: string; recommended?: boolean }) {
+function ModelTable({ models, empty, recommended = false, showStatus = false, selectedModels = [], onToggleModel }: { models: CandidateModel[]; empty: string; recommended?: boolean; showStatus?: boolean; selectedModels?: string[]; onToggleModel?: (id: string) => void }) {
   if (!models.length) {
     return <div className="rounded-lg border border-dashed border-border bg-background/70 p-5 text-center text-xs text-muted-foreground">{empty}</div>;
   }
@@ -140,33 +167,95 @@ function ModelTable({ models, empty, recommended = false }: { models: CandidateM
       <table className="w-full min-w-[680px] text-xs">
         <thead className="sticky top-0 bg-primary/10 text-primary">
           <tr>
+            {onToggleModel && <th className="px-3 py-2 text-left font-semibold">Select</th>}
             {recommended && <th className="px-3 py-2 text-left font-semibold">Rank</th>}
             <th className="px-3 py-2 text-left font-semibold">Model</th>
             <th className="px-3 py-2 text-left font-semibold">Batch</th>
             <th className="px-3 py-2 text-right font-semibold">R² / Rsq</th>
             <th className="px-3 py-2 text-right font-semibold">MAPE</th>
             <th className="px-3 py-2 text-right font-semibold">Holdout MAPE</th>
-            <th className="px-3 py-2 text-left font-semibold">Status</th>
+            {showStatus && <th className="px-3 py-2 text-left font-semibold">Status</th>}
           </tr>
         </thead>
         <tbody>
           {models.map((model, index) => (
             <tr key={model.id} className="border-t border-border odd:bg-card even:bg-sidebar-accent/35 hover:bg-primary/10">
+              {onToggleModel && <td className="px-3 py-2"><Checkbox checked={selectedModels.includes(model.id)} disabled={!selectedModels.includes(model.id) && selectedModels.length >= 3} onCheckedChange={() => onToggleModel(model.id)} /></td>}
               {recommended && <td className="px-3 py-2 font-semibold text-primary">#{index + 1}</td>}
               <td className="px-3 py-2 font-mono font-semibold text-foreground">{model.id}</td>
               <td className="px-3 py-2 text-muted-foreground">Batch {model.batch}</td>
               <td className="px-3 py-2 text-right font-semibold text-foreground">{model.rsq.toFixed(2)}</td>
               <td className="px-3 py-2 text-right text-foreground">{model.mape.toFixed(1)}%</td>
               <td className="px-3 py-2 text-right text-foreground">{model.holdoutMape.toFixed(1)}%</td>
-              <td className="px-3 py-2">
+              {showStatus && <td className="px-3 py-2">
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${model.status === "qualified" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
                   {model.status === "qualified" ? <CheckCircle2 size={12} /> : <XCircle size={12} />} {recommended ? "Recommended" : model.reason}
                 </span>
-              </td>
+              </td>}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+const contributionRows = [
+  { label: "Base contribution", base: 46 },
+  { label: "TV contribution", base: 18 },
+  { label: "Digital contribution", base: 14 },
+  { label: "Promo contribution", base: 9 },
+  { label: "Seasonality contribution", base: 5 },
+  { label: "TV ROI", base: 3.1, suffix: "x" },
+  { label: "Digital ROI", base: 2.6, suffix: "x" },
+  { label: "Promo ROI", base: 1.3, suffix: "x" },
+];
+
+function ModelOutputComparison({ models }: { models: CandidateModel[] }) {
+  return (
+    <section className="mt-3 rounded-lg border border-primary/20 bg-background/90 p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold text-foreground">Model output comparison</p>
+          <p className="text-[11px] text-muted-foreground">Statistical parameters, contribution mix, and ROI across selected models.</p>
+        </div>
+        <Badge variant="outline" className="border-primary/25 bg-primary/10 text-primary">{models.length} selected</Badge>
+      </div>
+
+      <div className="overflow-auto rounded-lg border border-border bg-card">
+        <table className="w-full min-w-[620px] text-xs">
+          <thead className="bg-primary/10 text-primary">
+            <tr>
+              <th className="px-3 py-2 text-left font-semibold">Metric</th>
+              {models.map((model) => <th key={model.id} className="px-3 py-2 text-right font-semibold">{model.id}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            <ComparisonRow label="R² / Rsq" values={models.map((model) => model.rsq.toFixed(2))} strong />
+            <ComparisonRow label="MAPE" values={models.map((model) => `${model.mape.toFixed(1)}%`)} />
+            <ComparisonRow label="Holdout MAPE" values={models.map((model) => `${model.holdoutMape.toFixed(1)}%`)} />
+            {contributionRows.map((row, rowIndex) => (
+              <ComparisonRow
+                key={row.label}
+                label={row.label}
+                values={models.map((model, modelIndex) => {
+                  const value = row.base + ((model.rsq * 100 + rowIndex * 3 + modelIndex * 2) % 7) - 3;
+                  return row.suffix ? `${value.toFixed(1)}${row.suffix}` : `${Math.max(1, Math.round(value))}%`;
+                })}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonRow({ label, values, strong = false }: { label: string; values: string[]; strong?: boolean }) {
+  return (
+    <tr className="border-t border-border odd:bg-background even:bg-sidebar-accent/35">
+      <td className="px-3 py-2 font-medium text-foreground">{label}</td>
+      {values.map((value, index) => <td key={`${label}-${index}`} className={`px-3 py-2 text-right ${strong ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{value}</td>)}
+    </tr>
   );
 }
