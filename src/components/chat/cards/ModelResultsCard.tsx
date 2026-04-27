@@ -21,6 +21,42 @@ const channels = [
   { v: "Promo", spend: "£1.1M", contrib: "9.0%", roi: 1.2 },
 ];
 
+const fitPoints = [
+  { x: 0, actual: 52, predicted: 50 },
+  { x: 18, actual: 57, predicted: 56 },
+  { x: 36, actual: 55, predicted: 57 },
+  { x: 54, actual: 64, predicted: 62 },
+  { x: 72, actual: 68, predicted: 69 },
+  { x: 90, actual: 73, predicted: 72 },
+  { x: 108, actual: 70, predicted: 71 },
+  { x: 126, actual: 79, predicted: 78 },
+  { x: 144, actual: 83, predicted: 82 },
+  { x: 162, actual: 86, predicted: 84 },
+  { x: 180, actual: 88, predicted: 87 },
+];
+
+const decomposition = [
+  { label: "Base", value: 52, color: "hsl(var(--navy))" },
+  { label: "TV", value: 18, color: "hsl(var(--primary))" },
+  { label: "Digital", value: 14, color: "hsl(var(--accent-foreground))" },
+  { label: "Promo", value: 9, color: "hsl(var(--warning))" },
+  { label: "Other", value: 7, color: "hsl(var(--muted-foreground))" },
+];
+
+const responseCurves = [
+  { label: "TV", color: "hsl(var(--primary))", points: [8, 28, 47, 62, 72, 78] },
+  { label: "Digital", color: "hsl(var(--success))", points: [5, 24, 41, 54, 63, 70] },
+  { label: "Promo", color: "hsl(var(--warning))", points: [3, 16, 25, 32, 36, 39] },
+];
+
+const effectiveness = [
+  { label: "TV", value: 86 },
+  { label: "Digital", value: 74 },
+  { label: "OOH", value: 58 },
+  { label: "Radio", value: 51 },
+  { label: "Promo", value: 34 },
+];
+
 const roiCls = (r: number) =>
   r >= 2.5 ? "bg-success/10 text-success" : r >= 1.5 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
 
@@ -51,6 +87,110 @@ function Donut() {
         );
       })}
     </svg>
+  );
+}
+
+function linePath(values: number[], width = 180, height = 76) {
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  return values
+    .map((value, index) => {
+      const x = (index / (values.length - 1)) * width;
+      const y = height - ((value - min) / Math.max(1, max - min)) * height;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function ChartPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border bg-background/70 p-3">
+      <p className="mb-3 text-[11px] font-semibold text-foreground">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function ModelFitChart() {
+  return (
+    <div>
+      <svg viewBox="0 0 220 100" className="h-28 w-full overflow-visible">
+        <line x1="24" y1="10" x2="24" y2="88" stroke="hsl(var(--border))" />
+        <line x1="24" y1="88" x2="212" y2="88" stroke="hsl(var(--border))" />
+        <path d={linePath(fitPoints.map((p) => p.actual), 180, 70)} transform="translate(26 13)" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" />
+        <path d={linePath(fitPoints.map((p) => p.predicted), 180, 70)} transform="translate(26 13)" fill="none" stroke="hsl(var(--success))" strokeWidth="2.5" strokeDasharray="4 3" />
+      </svg>
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary" />Actual</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-success" />Predicted</span>
+      </div>
+    </div>
+  );
+}
+
+function DecompositionChart() {
+  return (
+    <div className="space-y-2">
+      {decomposition.map((item) => (
+        <div key={item.label}>
+          <div className="mb-1 flex items-center justify-between text-[10px]">
+            <span className="font-medium text-foreground">{item.label}</span>
+            <span className="text-muted-foreground">{item.value}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-muted">
+            <div className="h-full rounded-full" style={{ width: `${item.value}%`, backgroundColor: item.color }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ResponseCurveChart() {
+  return (
+    <div>
+      <svg viewBox="0 0 220 100" className="h-28 w-full overflow-visible">
+        <line x1="22" y1="88" x2="212" y2="88" stroke="hsl(var(--border))" />
+        <line x1="22" y1="12" x2="22" y2="88" stroke="hsl(var(--border))" />
+        {responseCurves.map((curve) => (
+          <path key={curve.label} d={linePath(curve.points, 180, 70)} transform="translate(26 13)" fill="none" stroke={curve.color} strokeWidth="2.4" strokeLinecap="round" />
+        ))}
+      </svg>
+      <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+        {responseCurves.map((curve) => (
+          <span key={curve.label} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: curve.color }} />{curve.label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RoiChart() {
+  return (
+    <div className="space-y-2">
+      {channels.map((channel) => (
+        <div key={channel.v} className="grid grid-cols-[52px_1fr_32px] items-center gap-2 text-[10px]">
+          <span className="font-medium text-foreground">{channel.v}</span>
+          <div className="h-2 rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${(channel.roi / 3.4) * 100}%` }} />
+          </div>
+          <span className="text-right font-semibold text-foreground">{channel.roi}x</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EffectivenessChart() {
+  return (
+    <div className="flex h-28 items-end gap-2 border-b border-border px-1">
+      {effectiveness.map((item) => (
+        <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
+          <div className="w-full rounded-t bg-success/70" style={{ height: `${item.value}%` }} />
+          <span className="text-[9px] text-muted-foreground">{item.label}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -107,6 +247,26 @@ export function ModelResultsCard() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <ChartPanel title="Model fit">
+            <ModelFitChart />
+          </ChartPanel>
+          <ChartPanel title="Decomposition">
+            <DecompositionChart />
+          </ChartPanel>
+          <ChartPanel title="Response curves">
+            <ResponseCurveChart />
+          </ChartPanel>
+          <ChartPanel title="ROI">
+            <RoiChart />
+          </ChartPanel>
+          <div className="md:col-span-2">
+            <ChartPanel title="Effectiveness">
+              <EffectivenessChart />
+            </ChartPanel>
           </div>
         </div>
 
