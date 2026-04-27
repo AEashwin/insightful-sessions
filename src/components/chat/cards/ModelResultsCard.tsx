@@ -139,10 +139,17 @@ function linePath(values: number[], width = 180, height = 76) {
     .join(" ");
 }
 
-function ChartPanel({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartPanel({ title, children, onExpand }: { title: string; children: React.ReactNode; onExpand?: () => void }) {
   return (
     <div className="rounded-lg border border-border bg-background/70 p-3">
-      <p className="mb-3 text-[11px] font-semibold text-foreground">{title}</p>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold text-foreground">{title}</p>
+        {onExpand && (
+          <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[10px]" onClick={onExpand}>
+            <Maximize2 size={11} /> Expand
+          </Button>
+        )}
+      </div>
       {children}
     </div>
   );
@@ -183,18 +190,19 @@ function DecompositionChart() {
   );
 }
 
-function ResponseCurveChart() {
+function ResponseCurveChart({ period = "All periods" }: { period?: string }) {
+  const curves = responseCurveByPeriod[period] ?? responseCurves;
   return (
     <div>
       <svg viewBox="0 0 220 100" className="h-28 w-full overflow-visible">
         <line x1="22" y1="88" x2="212" y2="88" stroke="hsl(var(--border))" />
         <line x1="22" y1="12" x2="22" y2="88" stroke="hsl(var(--border))" />
-        {responseCurves.map((curve) => (
+        {curves.map((curve) => (
           <path key={curve.label} d={linePath(curve.points, 180, 70)} transform="translate(26 13)" fill="none" stroke={curve.color} strokeWidth="2.4" strokeLinecap="round" />
         ))}
       </svg>
       <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
-        {responseCurves.map((curve) => (
+        {curves.map((curve) => (
           <span key={curve.label} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: curve.color }} />{curve.label}</span>
         ))}
       </div>
