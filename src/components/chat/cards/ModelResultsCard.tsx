@@ -84,6 +84,8 @@ const periodComparison = [
   { period: "Q4 2024", tv: 17, digital: 14, promo: 11, other: 6, effectiveness: 74, roi: 2.4, spend: "£1.1M", contribution: "48%" },
 ];
 
+const fullPeriod = { period: "Full period", tv: 18, digital: 14, promo: 9, other: 7, effectiveness: 74, roi: 2.4, spend: "£5.2M", contribution: "48%" };
+
 const effectiveness = [
   { label: "TV", value: 86 },
   { label: "Digital", value: 74 },
@@ -305,17 +307,52 @@ function ComparisonGrid({ metric }: { metric: "effectiveness" | "roi" | "scroi" 
   );
 }
 
-function ExpandedInsight({ type, responsePeriod }: { type: string; responsePeriod: string }) {
+function FullPeriodScore({ metric }: { metric: "effectiveness" | "roi" | "scroi" }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Full period</p>
+      {metric === "scroi" ? (
+        <div className="mt-3 space-y-2 text-[11px]">
+          <div className="flex justify-between"><span className="text-muted-foreground">Spend</span><span className="font-semibold text-foreground">{fullPeriod.spend}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Contribution</span><span className="font-semibold text-foreground">{fullPeriod.contribution}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">ROI</span><span className="font-semibold text-foreground">{fullPeriod.roi}x</span></div>
+        </div>
+      ) : (
+        <>
+          <p className="mt-2 text-2xl font-bold text-foreground">{metric === "roi" ? `${fullPeriod.roi}x` : `${fullPeriod.effectiveness}%`}</p>
+          <div className="mt-3 h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${metric === "roi" ? (fullPeriod.roi / 3) * 100 : fullPeriod.effectiveness}%` }} /></div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare, onResponsePeriodChange }: { type: string; responsePeriod: string; comparePeriods: boolean; onToggleCompare: () => void; onResponsePeriodChange: (period: string) => void }) {
+  const canCompare = ["Contribution pie", "Effectiveness", "ROI", "S+C+ROI", "Response curves"].includes(type);
   return (
     <div className="mt-4 rounded-xl border border-primary/20 bg-background p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
+        {canCompare && (
+          <div className="flex items-center gap-2">
+            {comparePeriods && type === "Response curves" && (
+              <select value={responsePeriod} onChange={(event) => onResponsePeriodChange(event.target.value)} className="h-8 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
+                {periodOptions.map((period) => <option key={period}>{period}</option>)}
+              </select>
+            )}
+            <Button variant={comparePeriods ? "default" : "outline"} size="sm" className="h-8 text-[11px]" onClick={onToggleCompare}>
+              {comparePeriods ? "Full period" : "Compare periods"}
+            </Button>
+          </div>
+        )}
+      </div>
       {type === "Model fit" && <><ModelFitChart /><DataTable headers={["Week", "Actual", "Predicted", "Variance", "Variance %"]} rows={fitPoints.map((p, i) => [`W${i + 1}`, p.actual, p.predicted, p.actual - p.predicted, `${(((p.actual - p.predicted) / p.actual) * 100).toFixed(1)}%`])} /></>}
       {type === "Decomposition" && <><DecompositionChart /><DataTable headers={["Component", "Contribution %", "Value", "Category"]} rows={decomposition.map((d) => [d.label, `${d.value}%`, `£${(d.value * 42).toLocaleString()}k`, d.label === "Base" ? "Baseline" : "Incremental"])} /></>}
-      {type === "Contribution pie" && <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div>}
-      {type === "Effectiveness" && <ComparisonGrid metric="effectiveness" />}
-      {type === "ROI" && <ComparisonGrid metric="roi" />}
-      {type === "S+C+ROI" && <ComparisonGrid metric="scroi" />}
-      {type === "Response curves" && <><ResponseCurveChart period={responsePeriod} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[responsePeriod] ?? responseCurves).map((c) => [c.label, responsePeriod, c.points[1], c.points[3], c.points[5]])} /></>}
+      {type === "Contribution pie" && (comparePeriods ? <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div> : <MiniContributionPie period={fullPeriod} />)}
+      {type === "Effectiveness" && (comparePeriods ? <ComparisonGrid metric="effectiveness" /> : <FullPeriodScore metric="effectiveness" />)}
+      {type === "ROI" && (comparePeriods ? <ComparisonGrid metric="roi" /> : <FullPeriodScore metric="roi" />)}
+      {type === "S+C+ROI" && (comparePeriods ? <ComparisonGrid metric="scroi" /> : <FullPeriodScore metric="scroi" />)}
+      {type === "Response curves" && <><ResponseCurveChart period={comparePeriods ? responsePeriod : "All periods"} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[comparePeriods ? responsePeriod : "All periods"] ?? responseCurves).map((c) => [c.label, comparePeriods ? responsePeriod : "Full period", c.points[1], c.points[3], c.points[5]])} /></>}
     </div>
   );
 }
@@ -334,6 +371,7 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<str
 export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" | "page" }) {
   const [expandedInsight, setExpandedInsight] = useState("Model fit");
   const [responsePeriod, setResponsePeriod] = useState("All periods");
+  const [comparePeriods, setComparePeriods] = useState(false);
   const expandedRef = useRef<HTMLDivElement>(null);
   const expandToInsight = (insight: string) => {
     setExpandedInsight(insight);
@@ -384,23 +422,16 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
           <DecompositionChart />
         </ChartPanel>
         <ChartPanel title="Contribution pie" onExpand={() => expandToInsight("Contribution pie")}>
-          <div className="grid grid-cols-2 gap-2">
-            {periodComparison.slice(0, 4).map((period) => <MiniContributionPie key={period.period} period={period} />)}
-          </div>
+          <MiniContributionPie period={fullPeriod} />
         </ChartPanel>
         <ChartPanel title="Response curves" onExpand={() => expandToInsight("Response curves")}>
-          <div className="mb-2 flex justify-end">
-            <select value={responsePeriod} onChange={(event) => setResponsePeriod(event.target.value)} className="h-7 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
-              {periodOptions.map((period) => <option key={period}>{period}</option>)}
-            </select>
-          </div>
-          <ResponseCurveChart period={responsePeriod} />
+          <ResponseCurveChart period="All periods" />
         </ChartPanel>
         <ChartPanel title="ROI" onExpand={() => expandToInsight("ROI")}>
           <RoiChart />
         </ChartPanel>
         <ChartPanel title="S+C+ROI" onExpand={() => expandToInsight("S+C+ROI")}>
-          <ComparisonGrid metric="scroi" />
+          <FullPeriodScore metric="scroi" />
         </ChartPanel>
         <div className="md:col-span-2">
           <ChartPanel title="Effectiveness" onExpand={() => expandToInsight("Effectiveness")}>
@@ -410,7 +441,7 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
       </div>
 
       <div ref={expandedRef}>
-        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} />
+        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} comparePeriods={comparePeriods} onToggleCompare={() => setComparePeriods((current) => !current)} onResponsePeriodChange={setResponsePeriod} />
       </div>
 
       <div className="mt-3">
