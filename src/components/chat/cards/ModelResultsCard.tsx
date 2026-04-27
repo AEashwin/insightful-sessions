@@ -307,6 +307,26 @@ function ComparisonGrid({ metric }: { metric: "effectiveness" | "roi" | "scroi" 
   );
 }
 
+function FullPeriodScore({ metric }: { metric: "effectiveness" | "roi" | "scroi" }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Full period</p>
+      {metric === "scroi" ? (
+        <div className="mt-3 space-y-2 text-[11px]">
+          <div className="flex justify-between"><span className="text-muted-foreground">Spend</span><span className="font-semibold text-foreground">{fullPeriod.spend}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Contribution</span><span className="font-semibold text-foreground">{fullPeriod.contribution}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">ROI</span><span className="font-semibold text-foreground">{fullPeriod.roi}x</span></div>
+        </div>
+      ) : (
+        <>
+          <p className="mt-2 text-2xl font-bold text-foreground">{metric === "roi" ? `${fullPeriod.roi}x` : `${fullPeriod.effectiveness}%`}</p>
+          <div className="mt-3 h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${metric === "roi" ? (fullPeriod.roi / 3) * 100 : fullPeriod.effectiveness}%` }} /></div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare }: { type: string; responsePeriod: string; comparePeriods: boolean; onToggleCompare: () => void }) {
   const canCompare = ["Contribution pie", "Effectiveness", "ROI", "S+C+ROI", "Response curves"].includes(type);
   return (
@@ -321,10 +341,10 @@ function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare
       </div>
       {type === "Model fit" && <><ModelFitChart /><DataTable headers={["Week", "Actual", "Predicted", "Variance", "Variance %"]} rows={fitPoints.map((p, i) => [`W${i + 1}`, p.actual, p.predicted, p.actual - p.predicted, `${(((p.actual - p.predicted) / p.actual) * 100).toFixed(1)}%`])} /></>}
       {type === "Decomposition" && <><DecompositionChart /><DataTable headers={["Component", "Contribution %", "Value", "Category"]} rows={decomposition.map((d) => [d.label, `${d.value}%`, `£${(d.value * 42).toLocaleString()}k`, d.label === "Base" ? "Baseline" : "Incremental"])} /></>}
-      {type === "Contribution pie" && (comparePeriods ? <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div> : <MiniContributionPie period={{ period: "Full period", tv: 18, digital: 14, promo: 9, other: 7, effectiveness: 74, roi: 2.4, spend: "£5.2M", contribution: "48%" }} />)}
-      {type === "Effectiveness" && (comparePeriods ? <ComparisonGrid metric="effectiveness" /> : <EffectivenessChart />)}
-      {type === "ROI" && (comparePeriods ? <ComparisonGrid metric="roi" /> : <RoiChart />)}
-      {type === "S+C+ROI" && (comparePeriods ? <ComparisonGrid metric="scroi" /> : <ComparisonGrid metric="scroi" />)}
+      {type === "Contribution pie" && (comparePeriods ? <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div> : <MiniContributionPie period={fullPeriod} />)}
+      {type === "Effectiveness" && (comparePeriods ? <ComparisonGrid metric="effectiveness" /> : <FullPeriodScore metric="effectiveness" />)}
+      {type === "ROI" && (comparePeriods ? <ComparisonGrid metric="roi" /> : <FullPeriodScore metric="roi" />)}
+      {type === "S+C+ROI" && (comparePeriods ? <ComparisonGrid metric="scroi" /> : <FullPeriodScore metric="scroi" />)}
       {type === "Response curves" && <><ResponseCurveChart period={comparePeriods ? responsePeriod : "All periods"} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[comparePeriods ? responsePeriod : "All periods"] ?? responseCurves).map((c) => [c.label, comparePeriods ? responsePeriod : "Full period", c.points[1], c.points[3], c.points[5]])} /></>}
     </div>
   );
