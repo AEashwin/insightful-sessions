@@ -334,9 +334,16 @@ function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
         {canCompare && (
-          <Button variant={comparePeriods ? "default" : "outline"} size="sm" className="h-8 text-[11px]" onClick={onToggleCompare}>
-            {comparePeriods ? "Full period" : "Compare periods"}
-          </Button>
+          <div className="flex items-center gap-2">
+            {comparePeriods && type === "Response curves" && (
+              <select value={responsePeriod} onChange={(event) => setResponsePeriod(event.target.value)} className="h-8 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
+                {periodOptions.map((period) => <option key={period}>{period}</option>)}
+              </select>
+            )}
+            <Button variant={comparePeriods ? "default" : "outline"} size="sm" className="h-8 text-[11px]" onClick={onToggleCompare}>
+              {comparePeriods ? "Full period" : "Compare periods"}
+            </Button>
+          </div>
         )}
       </div>
       {type === "Model fit" && <><ModelFitChart /><DataTable headers={["Week", "Actual", "Predicted", "Variance", "Variance %"]} rows={fitPoints.map((p, i) => [`W${i + 1}`, p.actual, p.predicted, p.actual - p.predicted, `${(((p.actual - p.predicted) / p.actual) * 100).toFixed(1)}%`])} /></>}
