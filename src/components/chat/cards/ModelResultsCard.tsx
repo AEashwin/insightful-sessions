@@ -415,23 +415,16 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
           <DecompositionChart />
         </ChartPanel>
         <ChartPanel title="Contribution pie" onExpand={() => expandToInsight("Contribution pie")}>
-          <div className="grid grid-cols-2 gap-2">
-            {periodComparison.slice(0, 4).map((period) => <MiniContributionPie key={period.period} period={period} />)}
-          </div>
+          <MiniContributionPie period={fullPeriod} />
         </ChartPanel>
         <ChartPanel title="Response curves" onExpand={() => expandToInsight("Response curves")}>
-          <div className="mb-2 flex justify-end">
-            <select value={responsePeriod} onChange={(event) => setResponsePeriod(event.target.value)} className="h-7 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
-              {periodOptions.map((period) => <option key={period}>{period}</option>)}
-            </select>
-          </div>
-          <ResponseCurveChart period={responsePeriod} />
+          <ResponseCurveChart period="All periods" />
         </ChartPanel>
         <ChartPanel title="ROI" onExpand={() => expandToInsight("ROI")}>
           <RoiChart />
         </ChartPanel>
         <ChartPanel title="S+C+ROI" onExpand={() => expandToInsight("S+C+ROI")}>
-          <ComparisonGrid metric="scroi" />
+          <FullPeriodScore metric="scroi" />
         </ChartPanel>
         <div className="md:col-span-2">
           <ChartPanel title="Effectiveness" onExpand={() => expandToInsight("Effectiveness")}>
