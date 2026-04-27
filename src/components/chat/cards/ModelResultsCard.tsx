@@ -281,8 +281,10 @@ function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inli
 
 export function ModelResultsCard() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [popoutOpen, setPopoutOpen] = useState(false);
 
   return (
+    <>
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
         <div>
@@ -376,7 +378,19 @@ export function ModelResultsCard() {
         </Button>
       </div>
 
-      {dashboardOpen && <FullResultsDashboard />}
+      {dashboardOpen && <FullResultsDashboard onOpenPopout={() => setPopoutOpen(true)} />}
     </div>
+    <Drawer open={popoutOpen} onOpenChange={setPopoutOpen} direction="right">
+      <DrawerContent className="inset-y-0 right-0 left-auto mt-0 h-screen w-[min(60vw,920px)] max-w-[calc(100vw-24px)] rounded-none border-l border-border">
+        <div className="sr-only">
+          <DrawerTitle>Model 1 Full Results</DrawerTitle>
+          <DrawerDescription>Expanded model dashboard popout</DrawerDescription>
+        </div>
+        <div className="h-full overflow-y-auto">
+          <FullResultsDashboard showPopout={false} variant="drawer" />
+        </div>
+      </DrawerContent>
+    </Drawer>
+    </>
   );
 }
