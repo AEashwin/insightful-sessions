@@ -589,7 +589,7 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
 
   if (baseState.waitingFor === "modelConfig" && /\b(go ahead|run|trigger|run model|confirmed|looks good|yes)\b/.test(input)) {
     return {
-      nextState: { ...baseState, step: 5, waitingFor: "modelResults" },
+      nextState: { ...baseState, step: 5, currentBatch: 1, waitingFor: "modelResults" },
       messages: [
         chainMessage("Model triggered.\n\nSummary of this run:\n- KPI: Sales\n- Modelling period: Jan 2022 – Dec 2024 · 156 weeks\n- Holdout: enabled\n- Variables selected: 9 mandatory drivers, with media, promotion, competition, and event controls\n- Candidate models: 64 across Batch 1–4\n\nThis should take around **10–12 minutes**. I’ll track candidate generation below and surface recommendations once the run completes."),
         chainMessage("Results are in. I’ve ranked the qualified candidates and pre-selected the top two for comparison. Use the checkboxes if you want to compare up to three models side by side.", "generation"),
@@ -602,11 +602,44 @@ function getSkillChainReply(text: string, state: SkillChainState): { nextState: 
     const match = input.match(/(?:show|view|open)?\s*model\s*(\d+)/);
     if (match) {
       const modelNumber = match[1];
+      const iteration = Math.max(baseState.currentBatch || Number(modelNumber) || 1, Number(modelNumber) || 1);
+      const readyMessage = iteration >= 3
+        ? "This is now a good model for publishing. Would you like to **publish this model** and move to simulation, or iterate further?"
+        : "I can do a better job here. I can re-run the modelling activity with an updated configuration and generate a new set of candidate models. Say **rerun model** to iterate, or **publish** if you want to use this version.";
       return {
-        nextState: { ...baseState, step: 6, waitingFor: "complete" },
+        nextState: { ...baseState, step: 6, currentBatch: iteration, waitingFor: "modelReady" },
         messages: [
           chainMessage(`Opening the detailed output for Model ${modelNumber}.`, "results"),
-          chainMessage(`Model ${modelNumber} is a strong candidate: R² is high, MAPE is within threshold, and the contribution split is commercially plausible. Review the ROI and channel contribution table, then tell me if you want a summary or optimisation next.`),
+          chainMessage(`I've generated a narrative summary for Model ${modelNumber}. This breakdown highlights the key drivers of performance and the efficiency of your media channels.`, "summary"),
+          chainMessage(`Model ${modelNumber} is a strong candidate: R² is high, MAPE is within threshold, and the contribution split is commercially plausible. ${readyMessage}`),
+        ],
+      };
+    }
+  }
+
+  if (baseState.waitingFor === "modelReady") {
+    if (/\b(publish|published|approve|use this|finalise|finalize|move to simulation|simulation)\b/.test(input)) {
+      return {
+        nextState: { ...baseState, step: 7, waitingFor: "complete" },
+        messages: [
+          chainMessage(`Published Model ${baseState.currentBatch || 1}. I’ll use this model as the approved baseline for simulation and optimisation.`),
+          chainMessage("Simulation is ready. You can now test budget shifts, response curves, and media mix scenarios against the published model.", "optimisation"),
+        ],
+      };
+    }
+
+    if (/\b(rerun|re-run|iterate|again|better|updated config|try another|continue)\b/.test(input)) {
+      const nextModel = (baseState.currentBatch || 1) + 1;
+      const closing = nextModel >= 3
+        ? `Model ${nextModel} results are ready. After you review it, I’ll recommend publishing unless you want one more iteration.`
+        : `Model ${nextModel} results are ready. I’ll compare this with the earlier run and we can decide whether to iterate again.`;
+      return {
+        nextState: { ...baseState, step: 5, currentBatch: nextModel, waitingFor: "modelResults" },
+        messages: [
+          chainMessage(`I can do a better job. I’m updating the model configuration using what we learned from Model ${baseState.currentBatch || 1}: tightening variable transforms, adjusting lag/adstock candidates, and refreshing QC thresholds.`),
+          chainMessage(`Re-running the modelling activity now. This creates a new set of 64 candidates for Model ${nextModel}. It should take around **10–12 minutes**.`),
+          chainMessage(closing, "generation"),
+          chainMessage(`Say **show model ${nextModel}** to open the detailed output and summary.`),
         ],
       };
     }
