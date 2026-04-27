@@ -364,6 +364,7 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<str
 export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" | "page" }) {
   const [expandedInsight, setExpandedInsight] = useState("Model fit");
   const [responsePeriod, setResponsePeriod] = useState("All periods");
+  const [comparePeriods, setComparePeriods] = useState(false);
   const expandedRef = useRef<HTMLDivElement>(null);
   const expandToInsight = (insight: string) => {
     setExpandedInsight(insight);
@@ -440,7 +441,7 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
       </div>
 
       <div ref={expandedRef}>
-        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} />
+        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} comparePeriods={comparePeriods} onToggleCompare={() => setComparePeriods((current) => !current)} />
       </div>
 
       <div className="mt-3">
