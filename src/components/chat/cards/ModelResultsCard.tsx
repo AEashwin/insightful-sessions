@@ -326,6 +326,8 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<str
 }
 
 export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" | "page" }) {
+  const [expandedInsight, setExpandedInsight] = useState("Model fit");
+  const [responsePeriod, setResponsePeriod] = useState("All periods");
   const openInNewTab = () => {
     window.open(`${window.location.origin}/model-results-dashboard`, "_blank", "noopener,noreferrer");
   };
@@ -364,24 +366,39 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <ChartPanel title="Model fit">
+        <ChartPanel title="Model fit" onExpand={() => setExpandedInsight("Model fit")}>
           <ModelFitChart />
         </ChartPanel>
-        <ChartPanel title="Decomposition">
+        <ChartPanel title="Decomposition" onExpand={() => setExpandedInsight("Decomposition")}>
           <DecompositionChart />
         </ChartPanel>
-        <ChartPanel title="Response curves">
-          <ResponseCurveChart />
+        <ChartPanel title="Contribution pie" onExpand={() => setExpandedInsight("Contribution pie")}>
+          <div className="grid grid-cols-2 gap-2">
+            {periodComparison.slice(0, 4).map((period) => <MiniContributionPie key={period.period} period={period} />)}
+          </div>
         </ChartPanel>
-        <ChartPanel title="ROI">
+        <ChartPanel title="Response curves" onExpand={() => setExpandedInsight("Response curves")}>
+          <div className="mb-2 flex justify-end">
+            <select value={responsePeriod} onChange={(event) => setResponsePeriod(event.target.value)} className="h-7 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
+              {periodOptions.map((period) => <option key={period}>{period}</option>)}
+            </select>
+          </div>
+          <ResponseCurveChart period={responsePeriod} />
+        </ChartPanel>
+        <ChartPanel title="ROI" onExpand={() => setExpandedInsight("ROI")}>
           <RoiChart />
         </ChartPanel>
+        <ChartPanel title="S+C+ROI" onExpand={() => setExpandedInsight("S+C+ROI")}>
+          <ComparisonGrid metric="scroi" />
+        </ChartPanel>
         <div className="md:col-span-2">
-          <ChartPanel title="Effectiveness">
+          <ChartPanel title="Effectiveness" onExpand={() => setExpandedInsight("Effectiveness")}>
             <EffectivenessChart />
           </ChartPanel>
         </div>
       </div>
+
+      <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} />
 
       <div className="mt-3">
         <p className="mb-2 text-[11px] font-semibold text-foreground">Full ROI table</p>
