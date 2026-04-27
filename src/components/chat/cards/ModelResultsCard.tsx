@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronDown, Download, ExternalLink, Maximize2, SlidersHorizontal, Table2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -143,7 +143,13 @@ function ChartPanel({ title, children, onExpand }: { title: string; children: Re
   return (
     <div className="rounded-lg border border-border bg-background/70 p-3">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold text-foreground">{title}</p>
+        {onExpand ? (
+          <button type="button" className="text-left text-[11px] font-semibold text-foreground underline-offset-2 hover:underline" onClick={onExpand}>
+            {title}
+          </button>
+        ) : (
+          <p className="text-[11px] font-semibold text-foreground">{title}</p>
+        )}
         {onExpand && (
           <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[10px]" onClick={onExpand}>
             <Maximize2 size={11} /> Expand
