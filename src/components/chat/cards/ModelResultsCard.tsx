@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { ChevronDown, Download, ExternalLink, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, SlidersHorizontal, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 
 const metrics = [
   { label: "R²", value: "0.94", tone: "success" },
@@ -380,17 +379,34 @@ export function ModelResultsCard() {
 
       {dashboardOpen && <FullResultsDashboard onOpenPopout={() => setPopoutOpen(true)} />}
     </div>
-    <Drawer open={popoutOpen} onOpenChange={setPopoutOpen} direction="right">
-      <DrawerContent className="inset-y-0 right-0 left-auto mt-0 h-screen w-[min(60vw,920px)] max-w-[calc(100vw-24px)] rounded-none border-l border-border">
-        <div className="sr-only">
-          <DrawerTitle>Model 1 Full Results</DrawerTitle>
-          <DrawerDescription>Expanded model dashboard popout</DrawerDescription>
+    {popoutOpen && (
+      <div className="fixed inset-0 z-50">
+        <button
+          type="button"
+          aria-label="Close full results panel"
+          className="absolute inset-0 bg-foreground/15 backdrop-blur-[1px]"
+          onClick={() => setPopoutOpen(false)}
+        />
+        <div className="absolute inset-y-0 right-0 flex h-full w-[min(60vw,920px)] max-w-[calc(100vw-24px)] min-w-[320px] flex-col border-l border-border bg-background shadow-2xl animate-in slide-in-from-right">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                <span>Model 1</span>
+                <span>›</span>
+                <span className="text-foreground">Full Results</span>
+              </div>
+              <p className="text-sm font-semibold text-foreground">Expanded model dashboard</p>
+            </div>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPopoutOpen(false)}>
+              <X size={14} />
+            </Button>
+          </div>
+          <div className="h-full overflow-y-auto">
+            <FullResultsDashboard showPopout={false} variant="drawer" />
+          </div>
         </div>
-        <div className="h-full overflow-y-auto">
-          <FullResultsDashboard showPopout={false} variant="drawer" />
-        </div>
-      </DrawerContent>
-    </Drawer>
+      </div>
+    )}
     </>
   );
 }
