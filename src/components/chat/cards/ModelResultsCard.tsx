@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, Download, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 
 const metrics = [
   { label: "R²", value: "0.94", tone: "success" },
@@ -198,9 +199,9 @@ function EffectivenessChart() {
   );
 }
 
-function FullResultsDashboard() {
+function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" }) {
   return (
-    <div className="border-t border-primary/20 bg-background/80 p-4 animate-accordion-down">
+    <div className={`${variant === "inline" ? "border-t border-primary/20 animate-accordion-down" : ""} bg-background/80 p-4`}>
       <div className="mb-4 flex flex-col gap-3 border-b border-border pb-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
@@ -216,9 +217,11 @@ function FullResultsDashboard() {
           </Button>
           <Button variant="outline" size="sm" className="h-8 text-[11px]">Due-to view</Button>
           <Button variant="outline" size="sm" className="h-8 text-[11px]">Include base</Button>
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Open in full screen">
-            <ExternalLink size={13} />
-          </Button>
+          {showPopout && (
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Open in full screen" onClick={onOpenPopout}>
+              <ExternalLink size={13} />
+            </Button>
+          )}
           <Button size="sm" className="h-8 gap-1.5 text-[11px]">
             <Download size={12} /> Export
           </Button>
@@ -278,8 +281,10 @@ function FullResultsDashboard() {
 
 export function ModelResultsCard() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [popoutOpen, setPopoutOpen] = useState(false);
 
   return (
+    <>
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
         <div>
@@ -373,7 +378,19 @@ export function ModelResultsCard() {
         </Button>
       </div>
 
-      {dashboardOpen && <FullResultsDashboard />}
+      {dashboardOpen && <FullResultsDashboard onOpenPopout={() => setPopoutOpen(true)} />}
     </div>
+    <Drawer open={popoutOpen} onOpenChange={setPopoutOpen} direction="right">
+      <DrawerContent className="inset-y-0 right-0 left-auto mt-0 h-screen w-[min(60vw,920px)] max-w-[calc(100vw-24px)] rounded-none border-l border-border">
+        <div className="sr-only">
+          <DrawerTitle>Model 1 Full Results</DrawerTitle>
+          <DrawerDescription>Expanded model dashboard popout</DrawerDescription>
+        </div>
+        <div className="h-full overflow-y-auto">
+          <FullResultsDashboard showPopout={false} variant="drawer" />
+        </div>
+      </DrawerContent>
+    </Drawer>
+    </>
   );
 }
