@@ -327,7 +327,7 @@ function FullPeriodScore({ metric }: { metric: "effectiveness" | "roi" | "scroi"
   );
 }
 
-function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare }: { type: string; responsePeriod: string; comparePeriods: boolean; onToggleCompare: () => void }) {
+function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare, onResponsePeriodChange }: { type: string; responsePeriod: string; comparePeriods: boolean; onToggleCompare: () => void; onResponsePeriodChange: (period: string) => void }) {
   const canCompare = ["Contribution pie", "Effectiveness", "ROI", "S+C+ROI", "Response curves"].includes(type);
   return (
     <div className="mt-4 rounded-xl border border-primary/20 bg-background p-4 shadow-sm">
@@ -336,7 +336,7 @@ function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare
         {canCompare && (
           <div className="flex items-center gap-2">
             {comparePeriods && type === "Response curves" && (
-              <select value={responsePeriod} onChange={(event) => setResponsePeriod(event.target.value)} className="h-8 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
+              <select value={responsePeriod} onChange={(event) => onResponsePeriodChange(event.target.value)} className="h-8 rounded-md border border-input bg-background px-2 text-[11px] text-foreground">
                 {periodOptions.map((period) => <option key={period}>{period}</option>)}
               </select>
             )}
@@ -441,7 +441,7 @@ export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant 
       </div>
 
       <div ref={expandedRef}>
-        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} comparePeriods={comparePeriods} onToggleCompare={() => setComparePeriods((current) => !current)} />
+        <ExpandedInsight type={expandedInsight} responsePeriod={responsePeriod} comparePeriods={comparePeriods} onToggleCompare={() => setComparePeriods((current) => !current)} onResponsePeriodChange={setResponsePeriod} />
       </div>
 
       <div className="mt-3">
