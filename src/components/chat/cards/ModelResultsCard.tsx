@@ -239,6 +239,92 @@ function EffectivenessChart() {
   );
 }
 
+function MiniContributionPie({ period }: { period: typeof periodComparison[number] }) {
+  const items = [
+    { label: "TV", value: period.tv, color: "hsl(var(--primary))" },
+    { label: "Digital", value: period.digital, color: "hsl(var(--success))" },
+    { label: "Promo", value: period.promo, color: "hsl(var(--warning))" },
+    { label: "Other", value: period.other, color: "hsl(var(--muted-foreground))" },
+  ];
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  let cumulative = 0;
+  const radius = 34;
+  const circ = 2 * Math.PI * radius;
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <p className="mb-2 text-[11px] font-semibold text-foreground">{period.period}</p>
+      <div className="flex items-center gap-3">
+        <svg viewBox="0 0 100 100" className="h-20 w-20 -rotate-90">
+          {items.map((item) => {
+            const dash = (item.value / total) * circ;
+            const offset = (cumulative / total) * circ;
+            cumulative += item.value;
+            return <circle key={item.label} cx="50" cy="50" r={radius} fill="none" stroke={item.color} strokeWidth="16" strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-offset} />;
+          })}
+        </svg>
+        <div className="min-w-0 flex-1 space-y-1">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center justify-between gap-2 text-[10px]">
+              <span className="inline-flex items-center gap-1 text-muted-foreground"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: item.color }} />{item.label}</span>
+              <span className="font-semibold text-foreground">{item.value}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComparisonGrid({ metric }: { metric: "effectiveness" | "roi" | "scroi" }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-4">
+      {periodComparison.map((period) => (
+        <div key={period.period} className="rounded-lg border border-border bg-card p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{period.period}</p>
+          {metric === "scroi" ? (
+            <div className="mt-3 space-y-2 text-[11px]">
+              <div className="flex justify-between"><span className="text-muted-foreground">Spend</span><span className="font-semibold text-foreground">{period.spend}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Contribution</span><span className="font-semibold text-foreground">{period.contribution}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">ROI</span><span className="font-semibold text-foreground">{period.roi}x</span></div>
+            </div>
+          ) : (
+            <>
+              <p className="mt-2 text-2xl font-bold text-foreground">{metric === "roi" ? `${period.roi}x` : `${period.effectiveness}%`}</p>
+              <div className="mt-3 h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${metric === "roi" ? (period.roi / 3) * 100 : period.effectiveness}%` }} /></div>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ExpandedInsight({ type, responsePeriod }: { type: string; responsePeriod: string }) {
+  return (
+    <div className="mt-4 rounded-xl border border-primary/20 bg-background p-4 shadow-sm">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
+      {type === "Model fit" && <><ModelFitChart /><DataTable headers={["Week", "Actual", "Predicted", "Variance", "Variance %"]} rows={fitPoints.map((p, i) => [`W${i + 1}`, p.actual, p.predicted, p.actual - p.predicted, `${(((p.actual - p.predicted) / p.actual) * 100).toFixed(1)}%`])} /></>}
+      {type === "Decomposition" && <><DecompositionChart /><DataTable headers={["Component", "Contribution %", "Value", "Category"]} rows={decomposition.map((d) => [d.label, `${d.value}%`, `£${(d.value * 42).toLocaleString()}k`, d.label === "Base" ? "Baseline" : "Incremental"])} /></>}
+      {type === "Contribution pie" && <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div>}
+      {type === "Effectiveness" && <ComparisonGrid metric="effectiveness" />}
+      {type === "ROI" && <ComparisonGrid metric="roi" />}
+      {type === "S+C+ROI" && <ComparisonGrid metric="scroi" />}
+      {type === "Response curves" && <><ResponseCurveChart period={responsePeriod} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[responsePeriod] ?? responseCurves).map((c) => [c.label, responsePeriod, c.points[1], c.points[3], c.points[5]])} /></>}
+    </div>
+  );
+}
+
+function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<string | number>> }) {
+  return (
+    <div className="mt-3 overflow-hidden rounded-md border border-border">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/40"><tr>{headers.map((h) => <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((row, i) => <tr key={i} className="border-t border-border">{row.map((cell, idx) => <td key={`${i}-${idx}`} className="px-3 py-2 text-foreground">{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
 export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" | "page" }) {
   const openInNewTab = () => {
     window.open(`${window.location.origin}/model-results-dashboard`, "_blank", "noopener,noreferrer");
