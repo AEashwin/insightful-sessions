@@ -305,17 +305,25 @@ function ComparisonGrid({ metric }: { metric: "effectiveness" | "roi" | "scroi" 
   );
 }
 
-function ExpandedInsight({ type, responsePeriod }: { type: string; responsePeriod: string }) {
+function ExpandedInsight({ type, responsePeriod, comparePeriods, onToggleCompare }: { type: string; responsePeriod: string; comparePeriods: boolean; onToggleCompare: () => void }) {
+  const canCompare = ["Contribution pie", "Effectiveness", "ROI", "S+C+ROI", "Response curves"].includes(type);
   return (
     <div className="mt-4 rounded-xl border border-primary/20 bg-background p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Table2 size={14} /> Expanded {type}</div>
+        {canCompare && (
+          <Button variant={comparePeriods ? "default" : "outline"} size="sm" className="h-8 text-[11px]" onClick={onToggleCompare}>
+            {comparePeriods ? "Full period" : "Compare periods"}
+          </Button>
+        )}
+      </div>
       {type === "Model fit" && <><ModelFitChart /><DataTable headers={["Week", "Actual", "Predicted", "Variance", "Variance %"]} rows={fitPoints.map((p, i) => [`W${i + 1}`, p.actual, p.predicted, p.actual - p.predicted, `${(((p.actual - p.predicted) / p.actual) * 100).toFixed(1)}%`])} /></>}
       {type === "Decomposition" && <><DecompositionChart /><DataTable headers={["Component", "Contribution %", "Value", "Category"]} rows={decomposition.map((d) => [d.label, `${d.value}%`, `£${(d.value * 42).toLocaleString()}k`, d.label === "Base" ? "Baseline" : "Incremental"])} /></>}
-      {type === "Contribution pie" && <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div>}
-      {type === "Effectiveness" && <ComparisonGrid metric="effectiveness" />}
-      {type === "ROI" && <ComparisonGrid metric="roi" />}
-      {type === "S+C+ROI" && <ComparisonGrid metric="scroi" />}
-      {type === "Response curves" && <><ResponseCurveChart period={responsePeriod} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[responsePeriod] ?? responseCurves).map((c) => [c.label, responsePeriod, c.points[1], c.points[3], c.points[5]])} /></>}
+      {type === "Contribution pie" && (comparePeriods ? <div className="grid gap-3 md:grid-cols-2">{periodComparison.map((period) => <MiniContributionPie key={period.period} period={period} />)}</div> : <MiniContributionPie period={{ period: "Full period", tv: 18, digital: 14, promo: 9, other: 7, effectiveness: 74, roi: 2.4, spend: "£5.2M", contribution: "48%" }} />)}
+      {type === "Effectiveness" && (comparePeriods ? <ComparisonGrid metric="effectiveness" /> : <EffectivenessChart />)}
+      {type === "ROI" && (comparePeriods ? <ComparisonGrid metric="roi" /> : <RoiChart />)}
+      {type === "S+C+ROI" && (comparePeriods ? <ComparisonGrid metric="scroi" /> : <ComparisonGrid metric="scroi" />)}
+      {type === "Response curves" && <><ResponseCurveChart period={comparePeriods ? responsePeriod : "All periods"} /><DataTable headers={["Channel", "Period", "Low spend", "Mid spend", "High spend"]} rows={(responseCurveByPeriod[comparePeriods ? responsePeriod : "All periods"] ?? responseCurves).map((c) => [c.label, comparePeriods ? responsePeriod : "Full period", c.points[1], c.points[3], c.points[5]])} /></>}
     </div>
   );
 }
