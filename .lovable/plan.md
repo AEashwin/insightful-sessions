@@ -1,30 +1,25 @@
-Plan to update the Model Results experience:
+Plan to add the new-tab popout option:
 
-1. Keep the results card compact by default
-- Leave the key metrics, 52/48 split, and short ROI summary visible.
-- Move the dense chart grid out of the always-visible body so the chat stays lightweight.
+1. Update the Model Results dashboard toolbar
+   - Keep the current square popout button for the in-app right-side panel.
+   - Add a second adjacent button for “Pop out to new tab”.
+   - Use a clear icon/label treatment so users can distinguish:
+     - in-app popout/drawer
+     - new browser tab
 
-2. Add a styled CTA button
-- Replace the current footer action with a primary button: “View Dashboard”.
-- Clicking it will open an expanded dashboard panel, not navigate away and not use a plain hyperlink.
+2. Implement the new-tab behavior
+   - Add a click handler that opens a focused dashboard route or URL in a new tab using `window.open(..., '_blank', 'noopener,noreferrer')`.
+   - If no dedicated full-screen route exists yet, create a lightweight full-page dashboard view that renders the same `FullResultsDashboard` content.
 
-3. Add an expanded dashboard panel below the card
-- Implement an accordion-style expansion directly under the compact summary.
-- Include breadcrumb text at the top: “Model 1 › Full Results”.
-- Include a top-right “Open in full screen ↗” icon button as a secondary power-user action.
+3. Reuse the existing dashboard UI
+   - Avoid duplicating chart/table logic.
+   - Share the current model output dashboard component between:
+     - inline accordion
+     - in-app slide-over panel
+     - new-tab full-page dashboard
 
-4. Put the full dashboard content inside the expanded panel
-- Charts: Model fit, Decomposition, Response curves / due-to style contribution view, ROI, Effectiveness.
-- Full ROI table with spend, contribution, ROI, and status coloring.
-- Filters / toggles row for options such as Channel group, View type, and Include base.
-- Export button in the dashboard header.
-
-5. Keep flow and modelling logic unchanged
-- Only update `ModelResultsCard.tsx` UI/state for the expand/collapse dashboard interaction.
-- Reuse the existing static chart data and semantic design tokens.
-- No changes to the chat chain, message flow, routing, or backend.
-
-Technical notes:
-- Use local React state in `ModelResultsCard` to toggle the expanded panel.
-- Use existing shadcn-style `Button`, `Badge`, and semantic Tailwind tokens.
-- If the panel feels too dense after implementation, structure it as a right-side drawer using the existing drawer component, but the first pass will follow your requested “slides open below” pattern.
+Technical details:
+- Main file to update: `src/components/chat/cards/ModelResultsCard.tsx`.
+- Likely route update: `src/App.tsx` if a new `/model-results` or similar full-screen route is needed.
+- Use existing semantic Tailwind tokens and existing `Button` styles.
+- Use Lucide icons already available in the project for the new-tab action.
