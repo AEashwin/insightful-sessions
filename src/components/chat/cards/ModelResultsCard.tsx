@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Download, ExternalLink, Maximize2, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, Maximize2, SlidersHorizontal, Table2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -49,6 +49,39 @@ const responseCurves = [
   { label: "TV", color: "hsl(var(--primary))", points: [8, 28, 47, 62, 72, 78] },
   { label: "Digital", color: "hsl(var(--success))", points: [5, 24, 41, 54, 63, 70] },
   { label: "Promo", color: "hsl(var(--warning))", points: [3, 16, 25, 32, 36, 39] },
+];
+
+const periodOptions = ["All periods", "Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"];
+
+const responseCurveByPeriod: Record<string, typeof responseCurves> = {
+  "All periods": responseCurves,
+  "Q1 2024": [
+    { label: "TV", color: "hsl(var(--primary))", points: [6, 22, 38, 51, 60, 66] },
+    { label: "Digital", color: "hsl(var(--success))", points: [7, 25, 39, 48, 55, 60] },
+    { label: "Promo", color: "hsl(var(--warning))", points: [4, 15, 23, 29, 33, 35] },
+  ],
+  "Q2 2024": [
+    { label: "TV", color: "hsl(var(--primary))", points: [9, 29, 49, 64, 74, 80] },
+    { label: "Digital", color: "hsl(var(--success))", points: [6, 27, 44, 57, 66, 73] },
+    { label: "Promo", color: "hsl(var(--warning))", points: [3, 18, 28, 35, 40, 43] },
+  ],
+  "Q3 2024": [
+    { label: "TV", color: "hsl(var(--primary))", points: [10, 31, 50, 66, 76, 81] },
+    { label: "Digital", color: "hsl(var(--success))", points: [5, 23, 41, 56, 67, 75] },
+    { label: "Promo", color: "hsl(var(--warning))", points: [2, 13, 21, 28, 31, 34] },
+  ],
+  "Q4 2024": [
+    { label: "TV", color: "hsl(var(--primary))", points: [7, 26, 45, 60, 70, 77] },
+    { label: "Digital", color: "hsl(var(--success))", points: [6, 24, 43, 58, 68, 76] },
+    { label: "Promo", color: "hsl(var(--warning))", points: [5, 20, 31, 39, 45, 49] },
+  ],
+};
+
+const periodComparison = [
+  { period: "Q1 2024", tv: 16, digital: 12, promo: 8, other: 6, effectiveness: 68, roi: 2.1, spend: "£1.0M", contribution: "42%" },
+  { period: "Q2 2024", tv: 19, digital: 15, promo: 9, other: 7, effectiveness: 76, roi: 2.5, spend: "£1.2M", contribution: "50%" },
+  { period: "Q3 2024", tv: 21, digital: 16, promo: 7, other: 8, effectiveness: 82, roi: 2.8, spend: "£1.4M", contribution: "52%" },
+  { period: "Q4 2024", tv: 17, digital: 14, promo: 11, other: 6, effectiveness: 74, roi: 2.4, spend: "£1.1M", contribution: "48%" },
 ];
 
 const effectiveness = [
