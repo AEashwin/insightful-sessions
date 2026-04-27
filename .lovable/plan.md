@@ -1,79 +1,30 @@
+Plan to update the Model Results experience:
 
+1. Keep the results card compact by default
+- Leave the key metrics, 52/48 split, and short ROI summary visible.
+- Move the dense chart grid out of the always-visible body so the chat stays lightweight.
 
-# DD 3.0 — MMM Analyst Platform (Revised)
+2. Add a styled CTA button
+- Replace the current footer action with a primary button: “View Dashboard”.
+- Clicking it will open an expanded dashboard panel, not navigate away and not use a plain hyperlink.
 
-Production-quality SaaS build with polished navigation, structured layouts, and DD 2.0-level finish.
+3. Add an expanded dashboard panel below the card
+- Implement an accordion-style expansion directly under the compact summary.
+- Include breadcrumb text at the top: “Model 1 › Full Results”.
+- Include a top-right “Open in full screen ↗” icon button as a secondary power-user action.
 
-## Design System
+4. Put the full dashboard content inside the expanded panel
+- Charts: Model fit, Decomposition, Response curves / due-to style contribution view, ROI, Effectiveness.
+- Full ROI table with spend, contribution, ROI, and status coloring.
+- Filters / toggles row for options such as Channel group, View type, and Include base.
+- Export button in the dashboard header.
 
-- **Primary:** `#534AB7` (deep purple)
-- **Font:** Inter via Google Fonts
-- **Backgrounds:** White main, `#F7F7F5` sidebar
-- **Status:** Green (complete), Amber (warning), Grey (draft)
-- **Style:** Crisp borders, subtle shadows, micro-interactions (hover states, transitions), pixel-perfect spacing
-- **CSS variables** in `index.css` updated for the purple palette
+5. Keep flow and modelling logic unchanged
+- Only update `ModelResultsCard.tsx` UI/state for the expand/collapse dashboard interaction.
+- Reuse the existing static chart data and semantic design tokens.
+- No changes to the chat chain, message flow, routing, or backend.
 
-## Global Shell (all screens)
-
-A persistent app shell wrapping all routes:
-
-- **Top header bar** (h-14, dark navy `#1E1B3A`): "DD 3.0" logo left, breadcrumb/page title center, notification bell + user avatar dropdown right (avatar with initials fallback, dropdown with "Settings", "Sign out")
-- **Consistent max-width container** with responsive padding
-- Smooth page transitions between routes
-
-## Screen 1 — Project Selector (`/`)
-
-- Card-based layout centered on page
-- Search input with icon, debounced filtering
-- 6 project rows: name, brand/market tags (Badge component), status badge (green/amber/grey), relative date, chevron
-- Selected row highlighted with purple left border + light purple bg
-- Summary panel slides in below with 4 stat cards (icon + value + label), two action buttons, AI note
-- "Resume workflow" navigates to `/workflow`
-
-## Screen 2 — Workflow Tracker (`/workflow`)
-
-- SidebarProvider layout using shadcn Sidebar component (280px, collapsible)
-- Sidebar: project name, session timer, progress bar, 9-stage vertical stepper with status icons, platform connection + token usage footer
-- Main area: active stage heading + subtitle, sub-task checklist with status colors, "Next step" card, embedded chat input
-- Clicking completed stages updates main panel content
-- Stages 3 and 4 link to `/classification` and `/model-output` respectively
-
-## Screen 3 — Variable Classification (`/classification`)
-
-- App shell header + back breadcrumb to workflow
-- Status summary bar with variable counts
-- Filter chip row (interactive) + search input
-- Full-width table (12 rows) with inline dropdowns (Select component), sign toggles, flag checkboxes
-- Flagged rows turn amber with inline correction note input
-- Fixed bottom action bar: warning count, "Apply AI suggestions" (clears flags), "Save & Continue"
-
-## Screen 4 — Model Output (`/model-output`)
-
-- App shell header + breadcrumb back to workflow
-- 3 metric cards with tinted backgrounds and threshold labels
-- CSS horizontal stacked bar chart with legend for contribution decomposition
-- 8-row performance table with color-coded ROI badges
-- Amber limitation banner
-- AI interpretation card (purple left border) with expandable follow-up chat input
-- "Proceed to Simulation" button
-
-## File Structure
-
-- `src/components/layout/AppHeader.tsx` — global header with logo, avatar, nav
-- `src/components/layout/AppShell.tsx` — wraps header + content area
-- `src/components/workflow/WorkflowSidebar.tsx` — sidebar stepper
-- `src/pages/Index.tsx` — project selector
-- `src/pages/Workflow.tsx` — workflow tracker
-- `src/pages/Classification.tsx` — variable classification
-- `src/pages/ModelOutput.tsx` — model output summary
-- Routes added to `App.tsx`
-
-## Polish Details
-
-- Hover states on all interactive rows/buttons (scale, bg shift)
-- Transition animations on panel reveals (summary panel, chat input)
-- Proper focus rings and keyboard navigation
-- Responsive: sidebar collapses on smaller screens
-- Loading skeleton states on data sections
-- Consistent 8px spacing grid throughout
-
+Technical notes:
+- Use local React state in `ModelResultsCard` to toggle the expanded panel.
+- Use existing shadcn-style `Button`, `Badge`, and semantic Tailwind tokens.
+- If the panel feels too dense after implementation, structure it as a right-side drawer using the existing drawer component, but the first pass will follow your requested “slides open below” pattern.

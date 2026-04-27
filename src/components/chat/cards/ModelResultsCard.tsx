@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronDown, Download, ExternalLink, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -56,6 +58,8 @@ const effectiveness = [
   { label: "Radio", value: 51 },
   { label: "Promo", value: 34 },
 ];
+
+const topChannels = channels.slice(0, 3);
 
 const roiCls = (r: number) =>
   r >= 2.5 ? "bg-success/10 text-success" : r >= 1.5 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive";
