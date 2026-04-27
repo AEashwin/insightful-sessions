@@ -84,6 +84,8 @@ const periodComparison = [
   { period: "Q4 2024", tv: 17, digital: 14, promo: 11, other: 6, effectiveness: 74, roi: 2.4, spend: "£1.1M", contribution: "48%" },
 ];
 
+const fullPeriod = { period: "Full period", tv: 18, digital: 14, promo: 9, other: 7, effectiveness: 74, roi: 2.4, spend: "£5.2M", contribution: "48%" };
+
 const effectiveness = [
   { label: "TV", value: 86 },
   { label: "Digital", value: 74 },
