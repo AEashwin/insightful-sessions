@@ -198,6 +198,84 @@ function EffectivenessChart() {
   );
 }
 
+function FullResultsDashboard() {
+  return (
+    <div className="border-t border-primary/20 bg-background/80 p-4 animate-accordion-down">
+      <div className="mb-4 flex flex-col gap-3 border-b border-border pb-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <span>Model 1</span>
+            <span>›</span>
+            <span className="text-foreground">Full Results</span>
+          </div>
+          <p className="text-sm font-semibold text-foreground">Expanded model dashboard</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]">
+            <SlidersHorizontal size={12} /> Channel group
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 text-[11px]">Due-to view</Button>
+          <Button variant="outline" size="sm" className="h-8 text-[11px]">Include base</Button>
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Open in full screen">
+            <ExternalLink size={13} />
+          </Button>
+          <Button size="sm" className="h-8 gap-1.5 text-[11px]">
+            <Download size={12} /> Export
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <ChartPanel title="Model fit">
+          <ModelFitChart />
+        </ChartPanel>
+        <ChartPanel title="Decomposition">
+          <DecompositionChart />
+        </ChartPanel>
+        <ChartPanel title="Response curves">
+          <ResponseCurveChart />
+        </ChartPanel>
+        <ChartPanel title="ROI">
+          <RoiChart />
+        </ChartPanel>
+        <div className="md:col-span-2">
+          <ChartPanel title="Effectiveness">
+            <EffectivenessChart />
+          </ChartPanel>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <p className="mb-2 text-[11px] font-semibold text-foreground">Full ROI table</p>
+        <div className="rounded-md border border-border overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40">
+              <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-1.5 text-left font-semibold">Channel</th>
+                <th className="px-3 py-1.5 text-right font-semibold">Spend</th>
+                <th className="px-3 py-1.5 text-right font-semibold">Contrib.</th>
+                <th className="px-3 py-1.5 text-right font-semibold">ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              {channels.map((c) => (
+                <tr key={c.v} className="border-t border-border hover:bg-muted/30 transition-colors">
+                  <td className="px-3 py-1.5 font-medium">{c.v}</td>
+                  <td className="px-3 py-1.5 text-right text-muted-foreground">{c.spend}</td>
+                  <td className="px-3 py-1.5 text-right">{c.contrib}</td>
+                  <td className="px-3 py-1.5 text-right">
+                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${roiCls(c.roi)}`}>{c.roi}x</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ModelResultsCard() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
 
