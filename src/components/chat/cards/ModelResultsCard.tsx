@@ -199,6 +199,8 @@ function EffectivenessChart() {
 }
 
 export function ModelResultsCard() {
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
@@ -254,28 +256,8 @@ export function ModelResultsCard() {
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <ChartPanel title="Model fit">
-            <ModelFitChart />
-          </ChartPanel>
-          <ChartPanel title="Decomposition">
-            <DecompositionChart />
-          </ChartPanel>
-          <ChartPanel title="Response curves">
-            <ResponseCurveChart />
-          </ChartPanel>
-          <ChartPanel title="ROI">
-            <RoiChart />
-          </ChartPanel>
-          <div className="md:col-span-2">
-            <ChartPanel title="Effectiveness">
-              <EffectivenessChart />
-            </ChartPanel>
-          </div>
-        </div>
-
         <div>
-          <p className="text-[11px] font-semibold text-foreground mb-2">ROI by channel</p>
+          <p className="text-[11px] font-semibold text-foreground mb-2">Top ROI summary</p>
           <div className="rounded-md border border-border overflow-hidden">
             <table className="w-full text-xs">
               <thead className="bg-muted/40">
@@ -287,7 +269,7 @@ export function ModelResultsCard() {
                 </tr>
               </thead>
               <tbody>
-                {channels.map((c) => (
+                {topChannels.map((c) => (
                   <tr key={c.v} className="border-t border-border hover:bg-muted/30 transition-colors">
                     <td className="px-3 py-1.5 font-medium">{c.v}</td>
                     <td className="px-3 py-1.5 text-right text-muted-foreground">{c.spend}</td>
@@ -307,8 +289,13 @@ export function ModelResultsCard() {
 
       <div className="px-4 py-3 border-t border-border bg-muted/20 flex items-center justify-between">
         <span className="text-[11px] text-muted-foreground">156 weeks · Jan 22 – Dec 24</span>
-        <Button size="sm" className="h-7 text-[11px]">View summary</Button>
+        <Button size="sm" className="h-7 gap-1.5 text-[11px]" onClick={() => setDashboardOpen((open) => !open)}>
+          View Dashboard
+          <ChevronDown size={12} className={`transition-transform ${dashboardOpen ? "rotate-180" : ""}`} />
+        </Button>
       </div>
+
+      {dashboardOpen && <FullResultsDashboard />}
     </div>
   );
 }
