@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Download, ExternalLink, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, Maximize2, SlidersHorizontal, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -198,7 +198,11 @@ function EffectivenessChart() {
   );
 }
 
-function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" }) {
+export function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inline" }: { onOpenPopout?: () => void; showPopout?: boolean; variant?: "inline" | "drawer" | "page" }) {
+  const openInNewTab = () => {
+    window.open(`${window.location.origin}/model-results-dashboard`, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className={`${variant === "inline" ? "border-t border-primary/20 animate-accordion-down" : ""} bg-background/80 p-4`}>
       <div className="mb-4 flex flex-col gap-3 border-b border-border pb-3 lg:flex-row lg:items-center lg:justify-between">
@@ -217,9 +221,14 @@ function FullResultsDashboard({ onOpenPopout, showPopout = true, variant = "inli
           <Button variant="outline" size="sm" className="h-8 text-[11px]">Due-to view</Button>
           <Button variant="outline" size="sm" className="h-8 text-[11px]">Include base</Button>
           {showPopout && (
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Open in full screen" onClick={onOpenPopout}>
-              <ExternalLink size={13} />
-            </Button>
+            <>
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0" aria-label="Pop out dashboard" onClick={onOpenPopout}>
+                <Maximize2 size={13} />
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-[11px]" onClick={openInNewTab}>
+                <ExternalLink size={13} /> New tab
+              </Button>
+            </>
           )}
           <Button size="sm" className="h-8 gap-1.5 text-[11px]">
             <Download size={12} /> Export
